@@ -1,0 +1,67 @@
+body {
+    width: 95%;
+    max-width: 800px;
+    margin: 2em auto;
+    line-height: 1.5em;
+    font-family: 'Roboto', serif;
+}
+
+#another {
+    color: gray;
+}
+
+#search {
+    margin: 1em auto;
+    width: 100%;
+    padding: 0.5em;
+}
+
+.course_header {
+    display: flex;
+}
+
+.course_id {
+    flex: 0 0 6em;
+    font-weight: 700;
+    color: #333;
+}
+
+.course_title {
+    flex: auto;
+    cursor: pointer;
+}
+
+.course_instructors {
+    flex: none;
+    font-weight: 700;
+    color: #333;
+}
+
+.course_instructors > span {
+    display: block;
+    text-align: right;
+}
+
+.course_details {
+    margin: 1em 2em;
+}
+
+.course_desc {
+    margin-bottom: 1em;
+}
+
+.specifics {
+    margin: auto 2em;
+}
+
+.row {
+    display: flex;
+}
+
+.key {
+    flex: 0 0 12em;
+}
+
+.value {
+    flex: auto;
+}
