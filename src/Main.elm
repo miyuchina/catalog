@@ -2,6 +2,7 @@ port module Main exposing (init)
 
 import Api exposing (..)
 import Browser
+import Dict exposing (Dict)
 import Html exposing (Html, div, h1, input, label, li, section, span, text, ul)
 import Html.Attributes exposing (class, hidden, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
@@ -92,8 +93,15 @@ update msg model =
 
                     else
                         Set.insert course.id model.expandedCourses
+
+                cmd =
+                    if Dict.member course.id model.api.details then
+                        Cmd.none
+
+                    else
+                        Cmd.map ApiMsg <| Api.loadCourseDetail course.id
             in
-            ( { model | expandedCourses = expandedCourses }, Cmd.none )
+            ( { model | expandedCourses = expandedCourses }, cmd )
 
 
 subscriptions : Model -> Sub Msg
@@ -142,7 +150,7 @@ viewCourses : Model -> Html Msg
 viewCourses model =
     div [ id "courses" ] <|
         List.map
-            (viewCourse model.expandedCourses)
+            (viewCourse model)
         <|
             case model.displayMode of
                 All ->
@@ -155,12 +163,12 @@ viewCourses model =
                     model.api.courses
 
 
-viewCourse : Set Int -> Api.Course -> Html Msg
-viewCourse expandedCourses course =
+viewCourse : Model -> Api.Course -> Html Msg
+viewCourse model course =
     div [ class "course" ] <|
         [ viewCourseHeader course ]
-            ++ (if Set.member course.id expandedCourses then
-                    [ viewCourseDetails expandedCourses course ]
+            ++ (if Set.member course.id model.expandedCourses then
+                    [ viewCourseDetails model.api.details course ]
 
                 else
                     []
@@ -178,30 +186,37 @@ viewCourseHeader course =
         ]
 
 
-viewCourseDetails : Set Int -> Api.Course -> Html Msg
-viewCourseDetails expandedCourses course =
-    div
-        [ class "course-details" ]
-        [ section [ class "course-desc" ] [ text course.desc ]
-        , viewCourseSpecifics course
-        ]
+viewCourseDetails : Dict Int Api.CourseDetail -> Api.Course -> Html Msg
+viewCourseDetails details course =
+    let
+        content =
+            case Dict.get course.id details of
+                Just detail ->
+                    [ section [ class "course-desc" ] [ text detail.desc ]
+                    , viewCourseSpecifics detail
+                    ]
+
+                Nothing ->
+                    [ text "loading..." ]
+    in
+    div [ class "course-details" ] content
 
 
-viewCourseSpecifics : Api.Course -> Html Msg
-viewCourseSpecifics course =
+viewCourseSpecifics : Api.CourseDetail -> Html Msg
+viewCourseSpecifics detail =
     div [ class "course-specifics" ]
         (List.map viewKeyValue
-            [ ( "Class Type", [ course.type_ ] )
-            , ( "Limit", [ course.limit ] )
-            , ( "Expected", [ course.expected ] )
-            , ( "Divisions", course.dreqs )
-            , ( "Distributions", course.divattr )
-            , ( "Distribution Notes", course.distnote )
-            , ( "Department Notes", course.deptnote )
-            , ( "Prerequisites", course.prerequisites )
-            , ( "Requirements / Evaluation", course.rqmtseval )
-            , ( "Material / Lab Fee", course.matlfee )
-            , ( "Extra Info", course.extrainfo )
+            [ ( "Class Type", [ detail.type_ ] )
+            , ( "Limit", [ detail.limit ] )
+            , ( "Expected", [ detail.expected ] )
+            , ( "Divisions", detail.dreqs )
+            , ( "Distributions", detail.divattr )
+            , ( "Distribution Notes", detail.distnote )
+            , ( "Department Notes", detail.deptnote )
+            , ( "Prerequisites", detail.prerequisites )
+            , ( "Requirements / Evaluation", detail.rqmtseval )
+            , ( "Material / Lab Fee", detail.matlfee )
+            , ( "Extra Info", detail.extrainfo )
             ]
         )
 

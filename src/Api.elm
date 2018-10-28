@@ -1,5 +1,6 @@
-module Api exposing (Course, Model, Msg, emptyModel, loadCourses, update)
+module Api exposing (Course, CourseDetail, Model, Msg, emptyModel, loadCourseDetail, loadCourses, update)
 
+import Dict exposing (Dict)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline as P
@@ -7,6 +8,7 @@ import Json.Decode.Pipeline as P
 
 type alias Model =
     { courses : List Course
+    , details : Dict Int CourseDetail
     , error : String
     }
 
@@ -14,12 +16,14 @@ type alias Model =
 emptyModel : Model
 emptyModel =
     { courses = []
+    , details = Dict.empty
     , error = ""
     }
 
 
 type Msg
     = CoursesLoaded (Result Http.Error (List Course))
+    | CourseDetailLoaded (Result Http.Error CourseDetail)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -33,12 +37,31 @@ update msg model =
                 Err err ->
                     ( { model | error = Debug.toString err }, Cmd.none )
 
+        CourseDetailLoaded result ->
+            case result of
+                Ok detail ->
+                    ( { model
+                        | details =
+                            Dict.insert detail.id detail model.details
+                      }
+                    , Cmd.none
+                    )
+
+                Err err ->
+                    ( { model | error = Debug.toString err }, Cmd.none )
+
 
 type alias Course =
     { id : Int
     , dept : String
     , title : String
     , code : Int
+    , instr : List String
+    }
+
+
+type alias CourseDetail =
+    { id : Int
     , desc : String
     , deptnote : List String
     , distnote : List String
@@ -52,21 +75,23 @@ type alias Course =
     , rqmtseval : List String
     , extrainfo : List String
     , type_ : String
-    , instr : List String
     }
 
 
 courseDecoder : D.Decoder Course
 courseDecoder =
-    let
-        listify =
-            D.map (String.split ";;") D.string
-    in
     D.succeed Course
         |> P.required "id" D.int
         |> P.required "dept" D.string
         |> P.required "title" D.string
         |> P.required "code" D.int
+        |> P.required "instr" listify
+
+
+courseDetailDecoder : D.Decoder CourseDetail
+courseDetailDecoder =
+    D.succeed CourseDetail
+        |> P.required "id" D.int
         |> P.required "desc" D.string
         |> P.required "deptnote" listify
         |> P.required "distnote" listify
@@ -80,9 +105,20 @@ courseDecoder =
         |> P.required "rqmtseval" listify
         |> P.required "extrainfo" listify
         |> P.required "type" D.string
-        |> P.required "instr" listify
+
+
+listify : D.Decoder (List String)
+listify =
+    D.map (String.split ";;") D.string
 
 
 loadCourses : Cmd Msg
 loadCourses =
-    Http.send CoursesLoaded (Http.get "/api/courses" (D.list courseDecoder))
+    Http.send CoursesLoaded <|
+        Http.get "/api/courses" (D.list courseDecoder)
+
+
+loadCourseDetail : Int -> Cmd Msg
+loadCourseDetail id =
+    Http.send CourseDetailLoaded <|
+        Http.get ("/api/course/" ++ String.fromInt id) courseDetailDecoder
