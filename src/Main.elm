@@ -2,8 +2,8 @@ port module Main exposing (init)
 
 import Api exposing (..)
 import Browser
-import Html exposing (Html, div, h1, input, li, section, span, text, ul)
-import Html.Attributes exposing (class, hidden, id, type_)
+import Html exposing (Html, div, h1, input, label, li, section, span, text, ul)
+import Html.Attributes exposing (class, hidden, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Set exposing (Set)
 
@@ -19,6 +19,7 @@ main =
 
 type alias Model =
     { api : Api.Model
+    , page : Int
     , expandedCourses : Set Int
     , displayMode : DisplayMode
     , searchResults : List Api.Course
@@ -34,6 +35,7 @@ type DisplayMode
 init : Bool -> ( Model, Cmd Msg )
 init _ =
     ( { api = Api.emptyModel
+      , page = 1
       , expandedCourses = Set.empty
       , displayMode = All
       , searchResults = []
@@ -60,7 +62,7 @@ update msg model =
             ( model, Cmd.none )
 
         LoadMore _ ->
-            ( model, Cmd.none )
+            ( { model | page = model.page + 1 }, Cmd.none )
 
         UserSearch searchTerm ->
             ( { model
@@ -104,11 +106,33 @@ view model =
     { title = "(Another) Williams College Course Catalog"
     , body =
         [ div [ id "navbar" ]
-            [ h1 []
-                [ span [ id "another" ] [ text "(Another)" ], text "Catalog" ]
-            , input [ id "search", type_ "text", onInput UserSearch ] []
+            [ div [ id "navbar-inner" ]
+                [ h1 []
+                    [ span [ id "another" ] [ text "(ANOTHER)" ], text "CATALOG" ]
+                ]
             ]
         , text model.api.error
+        , div [ id "toolbar" ]
+            [ input
+                [ id "search"
+                , type_ "text"
+                , onInput UserSearch
+                , placeholder "Search anything..."
+                ]
+                []
+            , input
+                [ type_ "button"
+                , value "View Bucket"
+                , class "tool-button"
+                ]
+                []
+            , input
+                [ type_ "button"
+                , value "Go to..."
+                , class "tool-button"
+                ]
+                []
+            ]
         , viewCourses model
         ]
     }
@@ -122,7 +146,7 @@ viewCourses model =
         <|
             case model.displayMode of
                 All ->
-                    model.api.courses
+                    List.take (model.page * 30) model.api.courses
 
                 Search ->
                     model.searchResults
@@ -133,10 +157,14 @@ viewCourses model =
 
 viewCourse : Set Int -> Api.Course -> Html Msg
 viewCourse expandedCourses course =
-    div [ class "course" ]
-        [ viewCourseHeader course
-        , viewCourseDetails expandedCourses course
-        ]
+    div [ class "course" ] <|
+        [ viewCourseHeader course ]
+            ++ (if Set.member course.id expandedCourses then
+                    [ viewCourseDetails expandedCourses course ]
+
+                else
+                    []
+               )
 
 
 viewCourseHeader : Api.Course -> Html Msg
@@ -153,9 +181,7 @@ viewCourseHeader course =
 viewCourseDetails : Set Int -> Api.Course -> Html Msg
 viewCourseDetails expandedCourses course =
     div
-        [ class "course-details"
-        , hidden <| not <| Set.member course.id expandedCourses
-        ]
+        [ class "course-details" ]
         [ section [ class "course-desc" ] [ text course.desc ]
         , viewCourseSpecifics course
         ]
