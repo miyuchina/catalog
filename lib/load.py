@@ -17,8 +17,8 @@ def main():
             INSERT INTO course
                 (dept, title, code, desc, deptnote, distnote, divattr,
                  dreqs, enrollmentpref, expected, limit_, matlfee, prerequisites,
-                 rqmtseval, type)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 rqmtseval, type, instr, extrainfo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''',
             (course['dept'],
              course['title'],
@@ -34,7 +34,9 @@ def main():
              unlist(course['matlfee']),
              unlist(course['prerequisites']),
              unlist(course['rqmtseval']),
-             course['type']
+             course['type'],
+             unlist([instr for section in course['sections'] for instr in section['instr']]),
+             unlist(course['extrainfo'])
             )
         )
         course_id = cursor.lastrowid

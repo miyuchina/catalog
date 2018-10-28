@@ -32,7 +32,9 @@ CREATE TABLE course (
     matlfee        TEXT,
     prerequisites  TEXT,
     rqmtseval      TEXT,
-    type           TEXT
+    extrainfo      TEXT,
+    type           TEXT,
+    instr          TEXT
 );
 
 CREATE TABLE section (
