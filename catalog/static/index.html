@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+  </body>
+  <script src="/static/catalog.js"></script>
+  <script>
+    const app = Elm.Main.init({
+      flags: false
+    });
+
+    const throttle = 500;
+    let lastLoaded = Date.now();
+
+    window.onscroll = () => {
+      const bottom = window.scrollY + window.innerHeight;
+      const scrollPercentage = bottom / document.body.scrollHeight;
+      const now = Date.now();
+      if (scrollPercentage > 0.9 && now - lastLoaded > throttle) {
+        app.ports.loadMore.send(true);
+        lastLoaded = now;
+      }
+    }
+  </script>
+</html>

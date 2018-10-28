@@ -67,8 +67,8 @@ async def parse_specifics(tag):
                  'extrainfo':      [],
                  'rqmtseval':      [],
                  'type':           '',
-                 'limit':           0,
-                 'expected':        0,
+                 'limit':          '',
+                 'expected':       '',
                 }
     for entry in tag.select('div'):
         result = await parse_label_value(entry)
@@ -105,8 +105,7 @@ async def parse_sections(class_tags, instructor_tags, time_tags):
 
 def parse_class_format(value):
     try:
-        return {k.lower(): int(v) if v.isdigit() else v
-                for k, v in [pair.split(': ') for pair in value.split('  ')] if k != 'Class#'}
+        return {k.lower(): v for k, v in [pair.split(': ') for pair in value.split('  ')] if k != 'Class#'}
     except ValueError:
         return {}
 

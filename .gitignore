@@ -1,4 +1,6 @@
 venv/
-__pycache__
+__pycache__/
+elm-stuff/
 *.sqlite
-*.json
+catalog.json
+catalog/static/catalog.js

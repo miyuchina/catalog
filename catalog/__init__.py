@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template
+from flask import Flask
 from catalog import api, db
 
 app = Flask(__name__)
@@ -12,4 +12,4 @@ app.teardown_appcontext(db.close_db)
 
 @app.route('/')
 def index():
-    return render_template('courses.html')
+    return app.send_static_file('index.html')
