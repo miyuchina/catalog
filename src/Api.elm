@@ -35,7 +35,7 @@ update msg model =
                     ( { model | courses = courses }, Cmd.none )
 
                 Err err ->
-                    ( { model | error = "error" }, Cmd.none )
+                    ( { model | error = Debug.toString err }, Cmd.none )
 
         CourseDetailLoaded result ->
             case result of
@@ -48,7 +48,7 @@ update msg model =
                     )
 
                 Err err ->
-                    ( { model | error = "error" }, Cmd.none )
+                    ( { model | error = Debug.toString err }, Cmd.none )
 
 
 type alias Course =

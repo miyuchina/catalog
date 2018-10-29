@@ -164,7 +164,8 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "(Another) Williams College Course Catalog"
     , body =
-        [ viewDialog model
+        [ text model.api.error
+        , viewDialog model
         , viewNavbar model
         , viewToolbar model.displayMode
         , viewCourses model
