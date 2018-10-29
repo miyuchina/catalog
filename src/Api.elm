@@ -1,4 +1,4 @@
-module Api exposing (Course, CourseDetail, Model, Msg, emptyModel, loadCourseDetail, loadCourses, update)
+module Api exposing (Course, CourseDetail, CourseSection, Model, Msg, emptyModel, loadCourseDetail, loadCourses, update)
 
 import Dict exposing (Dict)
 import Http
@@ -75,6 +75,14 @@ type alias CourseDetail =
     , rqmtseval : List String
     , extrainfo : List String
     , type_ : String
+    , sections : List CourseSection
+    }
+
+
+type alias CourseSection =
+    { type_ : String
+    , instr : List String
+    , tp : List String
     }
 
 
@@ -105,6 +113,15 @@ courseDetailDecoder =
         |> P.required "rqmtseval" listify
         |> P.required "extrainfo" listify
         |> P.required "type" D.string
+        |> P.required "section" (D.list courseSectionDecoder)
+
+
+courseSectionDecoder : D.Decoder CourseSection
+courseSectionDecoder =
+    D.succeed CourseSection
+        |> P.required "type" D.string
+        |> P.required "instr" listify
+        |> P.required "tp" listify
 
 
 listify : D.Decoder (List String)

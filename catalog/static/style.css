@@ -2,6 +2,28 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
+#mask {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    z-index: 1;
+}
+
+#dialog {
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: auto;
+    width: 50%;
+    max-width: 400px;
+    background-color: rgba(255, 255, 255, 1);
+    border: 2px solid black;
+    box-shadow: 4px 4px #222;
+}
+
 #navbar {
     position: fixed;
     top: 0;
@@ -14,16 +36,32 @@ body {
 
 #navbar-inner {
     width: 90%;
+    line-height: 3em;
     max-width: 800px;
     margin: 0 auto;
+    color: white;
+    display: flex;
 }
 
 #navbar h1 {
-    color: white;
-    line-height: 3em;
     margin: 0;
     font-size: 1em;
     display: inline-block;
+    flex: 1 0 auto;
+}
+
+#navbar a {
+    flex: 0 1 auto;
+    color: white;
+    text-decoration: none;
+}
+
+#navbar a:hover {
+    text-decoration: underline;
+}
+
+#navbar a+a {
+    margin-left: 1em;
 }
 
 #another {
@@ -80,6 +118,18 @@ body {
     display: flex;
     flex-wrap: wrap;
     cursor: pointer;
+    margin-left: -1em;
+    padding-left: 1em;
+}
+
+.add-to-bucket {
+    position: absolute;
+    margin: 0 -1em;
+    font-weight: bolder;
+}
+
+.course-header:hover .add-to-bucket {
+    display: inline-block;
 }
 
 .course-id {
@@ -108,6 +158,11 @@ body {
     line-height: 1.2em;
 }
 
+.course-sections {
+    border-top: 1px dashed #222;
+    margin-top: 1em;
+}
+
 .specifics-row {
     display: flex;
     margin-top: 0.5em;
@@ -127,13 +182,21 @@ body {
     list-style-position: inside;
 }
 
+.collapse {
+    margin-top: 1em;
+    font-weight: bolder;
+    color: #888;
+    cursor: pointer;
+}
+
 @media screen and (max-width: 500px) {
+    #dialog { width: 80%; }
+    #another::after { content: ' '; }
+    #toolbar { display: block; margin-top: 4em; }
+    #toolbar > input { display: block; width: 100%; text-align: left; }
     .course-header { display: block; margin-bottom: 0.5em; }
     .course-header > span { display: block; }
     .course-instr { text-align: left; }
     .specifics-row { display: block; }
     .specifics-row > span { display: block; }
-    #another::after { content: ' '; }
-    #toolbar { display: block; margin-top: 4em; }
-    #toolbar > input { display: block; width: 100%; text-align: left; }
 }
