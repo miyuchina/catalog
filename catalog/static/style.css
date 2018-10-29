@@ -9,7 +9,7 @@ body {
     bottom: 0;
     left: 0;
     background-color: rgba(255, 255, 255, 0.9);
-    z-index: 1;
+    z-index: 10;
 }
 
 #dialog {
@@ -32,6 +32,7 @@ body {
     height: 3em;
     background-color: #222;
     overflow: hidden;
+    z-index: 1;
 }
 
 #navbar-inner {
@@ -190,7 +191,7 @@ body {
     #dialog { width: 80%; }
     #another::after { content: ' '; }
     #toolbar { display: block; }
-    #toolbar > input, a { display: block; width: 100%; text-align: left; }
+    #toolbar > input, #toolbar > a { display: block; width: 100%; text-align: left; }
     .tool-button { margin-top: 1em; margin-left: 1em; }
     .course-header { display: block; margin-bottom: 0.5em; margin-left: 1em; padding-left: 0;}
     .course-header > span { display: block; }
