@@ -115,11 +115,13 @@ body {
     display: flex;
     flex-wrap: wrap;
     cursor: pointer;
+    margin-left: -20px;
+    padding-left: 20px;
 }
 
 .add-to-bucket {
     position: absolute;
-    margin: 3px -20px;
+    margin: 4px -20px;
     font-weight: bolder;
 }
 
