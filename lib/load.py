@@ -35,7 +35,7 @@ def main():
              unlist(course['prerequisites']),
              unlist(course['rqmtseval']),
              course['type'],
-             unlist([instr for section in course['sections'] for instr in section['instr']]),
+             unlist(set([instr for section in course['sections'] for instr in section['instr']])),
              unlist(course['extrainfo'])
             )
         )
