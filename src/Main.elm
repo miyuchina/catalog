@@ -23,6 +23,7 @@ main =
 type alias Model =
     { api : Api.Model
     , page : Int
+    , searchPage : Int
     , dialog : Dialog
     , bucket : Set Int
     , expandedCourses : Set Int
@@ -47,6 +48,7 @@ init : Bool -> ( Model, Cmd Msg )
 init _ =
     ( { api = Api.emptyModel
       , page = 1
+      , searchPage = 1
       , dialog = { title = "", content = [] }
       , bucket = Set.empty
       , expandedCourses = Set.empty
@@ -93,13 +95,18 @@ update msg model =
                 All ->
                     ( { model | page = model.page + 1 }, Cmd.none )
 
-                _ ->
+                Search ->
+                    ( { model | searchPage = model.searchPage + 1 }, Cmd.none )
+
+                Bucket ->
                     ( model, Cmd.none )
 
         UserSearch searchTerm ->
             case searchTerm of
                 "" ->
-                    ( { model | displayMode = All }, Cmd.none )
+                    ( { model | displayMode = All, searchPage = 1 }
+                    , Cmd.none
+                    )
 
                 _ ->
                     ( { model
@@ -255,7 +262,7 @@ viewCourses model =
                     List.take (model.page * 30) model.api.courses
 
                 Search ->
-                    model.searchResults
+                    List.take (model.searchPage * 30) model.searchResults
 
                 Bucket ->
                     List.filter
