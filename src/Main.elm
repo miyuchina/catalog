@@ -6,6 +6,7 @@ import Dict exposing (Dict)
 import Html exposing (Html, a, div, h1, input, label, li, section, span, text, ul)
 import Html.Attributes exposing (class, hidden, href, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput, stopPropagationOn)
+import Html.Lazy exposing (lazy, lazy4)
 import Json.Decode as D
 import Set exposing (Set)
 
@@ -88,18 +89,28 @@ update msg model =
             )
 
         LoadMore _ ->
-            ( { model | page = model.page + 1 }, Cmd.none )
+            case model.displayMode of
+                All ->
+                    ( { model | page = model.page + 1 }, Cmd.none )
+
+                _ ->
+                    ( model, Cmd.none )
 
         UserSearch searchTerm ->
-            ( { model
-                | displayMode = Search
-                , searchResults =
-                    List.filter
-                        (matchCourse <| String.toLower searchTerm)
-                        model.api.courses
-              }
-            , Cmd.none
-            )
+            case searchTerm of
+                "" ->
+                    ( { model | displayMode = All }, Cmd.none )
+
+                _ ->
+                    ( { model
+                        | displayMode = Search
+                        , searchResults =
+                            List.filter
+                                (matchCourse <| String.toLower searchTerm)
+                                model.api.courses
+                      }
+                    , Cmd.none
+                    )
 
         ApiMsg apiMsg ->
             let
@@ -165,15 +176,15 @@ view model =
     { title = "(Another) Williams College Course Catalog"
     , body =
         [ viewDialog model
-        , viewNavbar model
-        , viewToolbar model.displayMode
+        , viewNavbar
+        , lazy viewToolbar model.displayMode
         , viewCourses model
         ]
     }
 
 
-viewNavbar : Model -> Html Msg
-viewNavbar model =
+viewNavbar : Html Msg
+viewNavbar =
     div [ id "navbar" ]
         [ div [ id "navbar-inner" ]
             [ h1 []
@@ -235,7 +246,9 @@ viewCourses : Model -> Html Msg
 viewCourses model =
     div [ id "courses" ] <|
         List.map
-            (viewCourse model)
+            (\c ->
+                lazy4 viewCourse model.bucket model.expandedCourses model.api.details c
+            )
         <|
             case model.displayMode of
                 All ->
@@ -250,12 +263,12 @@ viewCourses model =
                         model.api.courses
 
 
-viewCourse : Model -> Api.Course -> Html Msg
-viewCourse model course =
+viewCourse : Set Int -> Set Int -> Dict Int Api.CourseDetail -> Api.Course -> Html Msg
+viewCourse bucket expandedCourses details course =
     div [ class "course" ] <|
-        [ viewCourseHeader (Set.member course.id model.bucket) course ]
-            ++ (if Set.member course.id model.expandedCourses then
-                    [ viewCourseDetails model.api.details course ]
+        [ viewCourseHeader (Set.member course.id bucket) course ]
+            ++ (if Set.member course.id expandedCourses then
+                    [ viewCourseDetails details course ]
 
                 else
                     []
@@ -389,14 +402,4 @@ onLocalClick msg =
 
 matchCourse : String -> Api.Course -> Bool
 matchCourse searchTerm course =
-    String.contains
-        searchTerm
-    <|
-        String.join
-            " "
-        <|
-            List.map String.toLower
-                [ course.dept ++ " " ++ String.fromInt course.code
-                , course.title
-                , String.join " " course.instr
-                ]
+    String.contains searchTerm course.searchable

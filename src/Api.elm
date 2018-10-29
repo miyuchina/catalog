@@ -57,7 +57,22 @@ type alias Course =
     , title : String
     , code : Int
     , instr : List String
+    , searchable : String
     }
+
+
+makeCourse : Int -> String -> String -> Int -> List String -> Course
+makeCourse id dept title code instr =
+    let
+        searchable =
+            String.join " " <|
+                List.map String.toLower
+                    [ dept ++ " " ++ String.fromInt code
+                    , title
+                    , String.join " " instr
+                    ]
+    in
+    Course id dept title code instr searchable
 
 
 type alias CourseDetail =
@@ -88,7 +103,7 @@ type alias CourseSection =
 
 courseDecoder : D.Decoder Course
 courseDecoder =
-    D.succeed Course
+    D.succeed makeCourse
         |> P.required "id" D.int
         |> P.required "dept" D.string
         |> P.required "title" D.string
