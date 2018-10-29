@@ -35,6 +35,11 @@ type alias Model =
     }
 
 
+perPage : Int
+perPage =
+    40
+
+
 type DisplayMode
     = All
     | Search
@@ -263,10 +268,10 @@ viewCourses model =
         <|
             case model.displayMode of
                 All ->
-                    List.take (model.page * 30) model.api.courses
+                    List.take (model.page * perPage) model.api.courses
 
                 Search ->
-                    List.take (model.searchPage * 30) model.searchResults
+                    List.take (model.searchPage * perPage) model.searchResults
 
                 Bucket ->
                     List.filter
