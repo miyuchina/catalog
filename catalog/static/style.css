@@ -74,26 +74,23 @@ body {
 }
 
 #toolbar {
-    margin: 3em auto 0 auto;
+    margin: 4em auto 0 auto;
     width: 90%;
     max-width: 800px;
     display: flex;
 }
 
-#toolbar > input {
-    margin-top: 1em;
-}
-
 .tool-button {
     flex: none;
-    margin-left: 1em;
-    padding: 0;
-    border: none;
-    background-color: white;
-    cursor: pointer;
+    margin: auto 0 auto 2em;
     font-weight: bolder;
-    font-size: normal;
     color: #222;
+    text-decoration: none;
+}
+
+.tool-button svg {
+    position: absolute;
+    margin-left: -20px;
 }
 
 .tool-button:hover {
@@ -118,13 +115,11 @@ body {
     display: flex;
     flex-wrap: wrap;
     cursor: pointer;
-    margin-left: -1em;
-    padding-left: 1em;
 }
 
 .add-to-bucket {
     position: absolute;
-    margin: 0 -1em;
+    margin: 3px -20px;
     font-weight: bolder;
 }
 
@@ -192,12 +187,13 @@ body {
 @media screen and (max-width: 500px) {
     #dialog { width: 80%; }
     #another::after { content: ' '; }
-    #toolbar { display: block; margin-top: 4em; }
-    #toolbar > input { display: block; width: 100%; text-align: left; }
+    #toolbar { display: block; }
+    #toolbar > input, a { display: block; width: 100%; text-align: left; }
+    .tool-button { margin-top: 1em; margin-left: 1em; }
     .course-header { display: block; margin-bottom: 0.5em; }
     .course-header > span { display: block; }
     .course-instr { text-align: left; }
     .specifics-row { display: block; }
     .specifics-row > span { display: block; }
-    .course-header { margin-left: 0; }
+    .course-header { margin-left: 1em; }
 }

@@ -2,12 +2,15 @@ port module Main exposing (init)
 
 import Api exposing (..)
 import Browser
+import Color exposing (black)
 import Dict exposing (Dict)
 import Html exposing (Html, a, div, h1, input, label, li, section, span, text, ul)
 import Html.Attributes exposing (class, hidden, href, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput, stopPropagationOn)
 import Html.Lazy exposing (lazy, lazy4)
 import Json.Decode as D
+import Material.Icons.Action exposing (bookmark, bookmark_border)
+import Material.Icons.Image exposing (collections, collections_bookmark)
 import Set exposing (Set)
 
 
@@ -219,6 +222,15 @@ viewDialog model =
 
 viewToolbar : DisplayMode -> Html Msg
 viewToolbar displayMode =
+    let
+        bucketContent =
+            case displayMode of
+                Bucket ->
+                    [ collections_bookmark black 16, text "View All" ]
+
+                _ ->
+                    [ collections_bookmark black 16, text "View Bucket" ]
+    in
     div [ id "toolbar" ]
         [ input
             [ id "search"
@@ -227,25 +239,17 @@ viewToolbar displayMode =
             , placeholder "Search anything..."
             ]
             []
-        , input
-            [ type_ "button"
-            , value <|
-                case displayMode of
-                    Bucket ->
-                        "View All"
-
-                    _ ->
-                        "View Bucket"
+        , a
+            [ href "#"
             , class "tool-button"
             , onClick ToggleBucket
             ]
-            []
-        , input
-            [ type_ "button"
-            , value "Go to..."
+            bucketContent
+        , a
+            [ href "#"
             , class "tool-button"
             ]
-            []
+            [ collections black 16, text "Go to..." ]
         ]
 
 
@@ -290,12 +294,11 @@ viewCourseHeader inBucket course =
             , onLocalClick <| ToggleInBucket course
             , hidden <| not inBucket
             ]
-            [ text <|
-                if inBucket then
-                    "-"
+            [ if inBucket then
+                bookmark black 16
 
-                else
-                    "+"
+              else
+                bookmark_border black 16
             ]
         , span [ class "course-id" ]
             [ text <| course.dept ++ " " ++ String.fromInt course.code ]
