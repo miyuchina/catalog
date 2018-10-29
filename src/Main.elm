@@ -272,7 +272,7 @@ viewCourseHeader inBucket course =
             ]
             [ text <|
                 if inBucket then
-                    "✔"
+                    "-"
 
                 else
                     "+"

@@ -199,4 +199,5 @@ body {
     .course-instr { text-align: left; }
     .specifics-row { display: block; }
     .specifics-row > span { display: block; }
+    .course-header { margin-left: 0; }
 }
