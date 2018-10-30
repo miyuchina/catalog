@@ -2,7 +2,7 @@ port module Main exposing (init)
 
 import Api exposing (..)
 import Browser
-import Color exposing (black)
+import Color exposing (Color, black)
 import Dict exposing (Dict)
 import Html exposing (Html, a, div, h1, input, label, li, section, span, text, ul)
 import Html.Attributes exposing (class, hidden, href, id, placeholder, type_, value)
@@ -10,8 +10,10 @@ import Html.Events exposing (onClick, onInput, stopPropagationOn)
 import Html.Lazy exposing (lazy, lazy4)
 import Json.Decode as D
 import Material.Icons.Action exposing (bookmark, bookmark_border)
+import Material.Icons.Content exposing (save)
 import Material.Icons.Image exposing (collections, collections_bookmark)
 import Set exposing (Set)
+import Svg exposing (Svg)
 
 
 main =
@@ -228,13 +230,13 @@ viewDialog model =
 viewToolbar : DisplayMode -> Html Msg
 viewToolbar displayMode =
     let
-        bucketContent =
+        bucketText =
             case displayMode of
                 Bucket ->
-                    [ collections_bookmark black 16, text "View All" ]
+                    "View All"
 
                 _ ->
-                    [ collections_bookmark black 16, text "View Bucket" ]
+                    "View Bucket"
     in
     div [ id "toolbar" ]
         [ input
@@ -244,18 +246,15 @@ viewToolbar displayMode =
             , placeholder "Search anything..."
             ]
             []
-        , a
-            [ href "#"
-            , class "tool-button"
-            , onClick ToggleBucket
-            ]
-            bucketContent
-        , a
-            [ href "#"
-            , class "tool-button"
-            ]
-            [ collections black 16, text "Go to..." ]
+        , viewToolbarButton ToggleBucket collections_bookmark bucketText
+        , viewToolbarButton NoOp save "Save bucket"
+        , viewToolbarButton NoOp collections "Go to..."
         ]
+
+
+viewToolbarButton : Msg -> (Color -> Int -> Svg Msg) -> String -> Html Msg
+viewToolbarButton msg icon content =
+    a [ href "#", class "tool-button", onClick msg ] [ iconize icon, text content ]
 
 
 viewCourses : Model -> Html Msg
@@ -299,11 +298,12 @@ viewCourseHeader inBucket course =
             , onLocalClick <| ToggleInBucket course
             , hidden <| not inBucket
             ]
-            [ if inBucket then
-                bookmark black 16
+            [ iconize <|
+                if inBucket then
+                    bookmark
 
-              else
-                bookmark_border black 16
+                else
+                    bookmark_border
             ]
         , span [ class "course-id" ]
             [ text <| course.dept ++ " " ++ String.fromInt course.code ]
@@ -413,6 +413,11 @@ onLocalClick msg =
     stopPropagationOn "click" <|
         D.map (\m -> ( m, True )) <|
             D.succeed msg
+
+
+iconize : (Color -> Int -> Svg Msg) -> Svg Msg
+iconize icon =
+    icon black 16
 
 
 matchCourse : String -> Api.Course -> Bool

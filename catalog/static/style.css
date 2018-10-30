@@ -153,7 +153,7 @@ body {
 }
 
 .course-desc {
-    line-height: 1.2em;
+    line-height: 1.4em;
 }
 
 .course-sections {
@@ -187,11 +187,19 @@ body {
     cursor: pointer;
 }
 
+@media screen and (min-width: 501px) and (max-width: 650px) {
+    #another::after { content: ' '; }
+    #toolbar { flex-wrap: wrap; }
+    #search { width: 100%; }
+    .tool-button { margin-top: 1em; margin-left: 20px; }
+    .tool-button + .tool-button { margin-top: 1em; margin-left: 2em; }
+}
+
 @media screen and (max-width: 500px) {
     #dialog { width: 80%; }
     #another::after { content: ' '; }
     #toolbar { display: block; }
-    #toolbar > input, #toolbar > a { display: block; width: 100%; text-align: left; }
+    #search, .tool-button { display: block; width: 100%; text-align: left; }
     .tool-button { margin-top: 1em; margin-left: 1em; }
     .course-header { display: block; margin-bottom: 0.5em; margin-left: 1em; padding-left: 0;}
     .course-header > span { display: block; }
