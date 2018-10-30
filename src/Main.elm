@@ -9,6 +9,7 @@ import Html.Attributes exposing (class, hidden, href, id, placeholder, type_, va
 import Html.Events exposing (onClick, onInput, stopPropagationOn)
 import Html.Lazy exposing (lazy, lazy4)
 import Json.Decode as D
+import Json.Encode as E
 import Material.Icons.Action exposing (bookmark, bookmark_border)
 import Material.Icons.Content exposing (save)
 import Material.Icons.Image exposing (collections, collections_bookmark)
@@ -54,13 +55,13 @@ type alias Dialog =
     }
 
 
-init : Bool -> ( Model, Cmd Msg )
-init _ =
+init : List Int -> ( Model, Cmd Msg )
+init bucket =
     ( { api = Api.emptyModel
       , page = 1
       , searchPage = 1
       , dialog = { title = "", content = [] }
-      , bucket = Set.empty
+      , bucket = Set.fromList bucket
       , expandedCourses = Set.empty
       , displayMode = All
       , searchResults = []
@@ -82,6 +83,9 @@ type Msg
 
 
 port loadMore : (Bool -> msg) -> Sub msg
+
+
+port localBucket : E.Value -> Cmd msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -162,7 +166,7 @@ update msg model =
                     else
                         Set.insert course.id model.bucket
             in
-            ( { model | bucket = bucket }, Cmd.none )
+            ( { model | bucket = bucket }, localBucket <| E.set E.int bucket )
 
         ToggleCourse course ->
             let

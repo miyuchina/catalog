@@ -10,7 +10,11 @@
   <script src="/static/catalog.js"></script>
   <script>
     const app = Elm.Main.init({
-      flags: false
+      flags: JSON.parse(localStorage.getItem('localBucket')) || []
+    });
+
+    app.ports.localBucket.subscribe(function(data) {
+        localStorage.setItem('localBucket', JSON.stringify(data));
     });
 
     const throttle = 500;
