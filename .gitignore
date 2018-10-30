@@ -4,3 +4,4 @@ elm-stuff/
 *.sqlite
 catalog.json
 catalog/static/catalog.js
+log.txt
