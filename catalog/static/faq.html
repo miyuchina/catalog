@@ -1,0 +1,116 @@
+<html>
+  <head>
+    <title>(Another) Williams College Course Catalog</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/normalize.css" />
+  </head>
+  <body>
+    <a id="back" href="/">← Go back</a>
+    <section>
+      <p class="q">
+        What is this?
+      </p>
+      <p class="a">
+        This is an unofficial version of the Williams College Catalog!
+        It comes with all the benefits of running a rogue website
+        without any college support:
+        be warned that the information might be out-of-date,
+        and that it is highly probable
+        I might decide to nuke my own server.
+        Seriously. I'm saying this because I've done this.
+      </p>
+
+      <p class="q">
+        ... but why?
+      </p>
+      <p class="a">
+        Partly because the current one is slow
+        and not very friendly to mobile usage.
+        And browsing through or searching for courses is terrible.
+        But mostly for fun.
+      </p>
+
+      <p class="q">
+        ... but how?
+      </p>
+      <p class="a">
+        This is a one-person project hacked together in a week.
+        The whole thing is currently running on a DigitalOcean VPS in New York,
+        which costs $5 per month.
+        I wrote the scraper (sorry OIT) in Python,
+        REST API in Flask,
+        and the frontend in Elm.
+        <a href="https://github.com/miyuchina/catalog">Here's the code</a>
+        if you want to stare at it.
+      </p>
+
+      <p class="q">
+        What are buckets?
+      </p>
+      <p class="a">
+        You can put courses in your bucket
+        by clicking on the bookmark symbol next to each course!
+        Click on "View Bucket" to see what's in your bucket.
+        Your bucket is saved locally in your browser,
+        so as long as you don't clear your browsing history
+        it should survive any number of reloading the page.
+      </p>
+      <p class="a">
+        If I get to it
+        I might add the functionality to check for schedule conflicts
+        in your bucket.
+        Once I've implemented user accounts
+        you will also be able to create multiple buckets
+        and save them on the server.
+        So that you can have your buckets forever.
+        Until I nuke 'em.
+      </p>
+
+      <p class="q">
+        What can I search for?
+      </p>
+      <p class="a">
+        Currently only the department code, course number,
+        title and instructors.
+        I might add division requirements in the future.
+      </p>
+
+      <p class="q">
+        Can you add X? / X is not working!
+      </p>
+      <p class="a">
+        Shoot me an email (unix: my4) and I'll see what I can do!
+      </p>
+    </section>
+  </body>
+  <style>
+    body {
+      width: 90%;
+      max-width: 800px;
+      margin: 2em auto;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+      line-height: 1.5em;
+    }
+
+    .q {
+      font-weight: bolder;
+    }
+
+    a {
+      color: black;
+      font-weight: bolder;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    #back {
+      font-size: larger;
+      line-height: 3em;
+    }
+
+  </style>
+</html>
