@@ -2,17 +2,18 @@ port module Main exposing (init)
 
 import Api exposing (..)
 import Browser
-import Color exposing (Color, black)
+import Color exposing (Color, black, white)
 import Dict exposing (Dict)
-import Html exposing (Html, a, div, h1, input, label, li, section, span, text, ul)
+import Html exposing (Html, a, div, form, h1, input, label, li, section, span, text, ul)
 import Html.Attributes exposing (class, hidden, href, id, placeholder, type_, value)
-import Html.Events exposing (onClick, onInput, stopPropagationOn)
+import Html.Events exposing (onClick, onInput, onSubmit, stopPropagationOn)
 import Html.Lazy exposing (lazy, lazy4)
 import Json.Decode as D
 import Json.Encode as E
 import Material.Icons.Action exposing (bookmark, bookmark_border)
 import Material.Icons.Content exposing (save)
 import Material.Icons.Image exposing (collections, collections_bookmark)
+import Material.Icons.Navigation exposing (close)
 import Set exposing (Set)
 import Svg exposing (Svg)
 
@@ -73,6 +74,7 @@ init bucket =
 type Msg
     = NoOp
     | ShowLogin
+    | ShowRegister
     | ClearDialog
     | LoadMore Bool
     | UserSearch String
@@ -96,6 +98,11 @@ update msg model =
 
         ShowLogin ->
             ( { model | dialog = loginDialog }
+            , Cmd.none
+            )
+
+        ShowRegister ->
+            ( { model | dialog = registerDialog }
             , Cmd.none
             )
 
@@ -196,7 +203,7 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "(Another) Williams College Course Catalog"
     , body =
-        [ viewDialog model
+        [ lazy viewDialog model.dialog
         , viewNavbar
         , lazy viewToolbar model.displayMode
         , viewCourses model
@@ -216,17 +223,17 @@ viewNavbar =
         ]
 
 
-viewDialog : Model -> Html Msg
-viewDialog model =
+viewDialog : Dialog -> Html Msg
+viewDialog dialog =
     div
         [ id "mask"
-        , hidden <| String.isEmpty model.dialog.title
+        , hidden <| String.isEmpty dialog.title
         , onClick ClearDialog
         ]
         [ div [ id "dialog", onLocalClick NoOp ]
-            [ h1 [ id "dialog-title" ] [ text model.dialog.title ]
-            , div [ id "dialog-content" ]
-                model.dialog.content
+            [ div [ id "close-dialog", onClick ClearDialog ] [ close white 24 ]
+            , h1 [ id "dialog-title" ] [ text dialog.title ]
+            , div [ id "dialog-content" ] dialog.content
             ]
         ]
 
@@ -406,9 +413,51 @@ viewKeyValue ( key, values ) =
 
 loginDialog : Dialog
 loginDialog =
-    { title = ""
+    { title = "Log in"
     , content =
-        []
+        [ form [ onSubmit NoOp ]
+            [ input [ type_ "text", placeholder "Username" ] []
+            , input [ type_ "password", placeholder "Password" ] []
+            , input
+                [ class "dialog-button"
+                , type_ "button"
+                , value "Register"
+                , onClick ShowRegister
+                ]
+                []
+            , input
+                [ class "dialog-button"
+                , type_ "submit"
+                , value "Log in"
+                ]
+                []
+            ]
+        ]
+    }
+
+
+registerDialog : Dialog
+registerDialog =
+    { title = "Register"
+    , content =
+        [ form [ onSubmit NoOp ]
+            [ input [ type_ "text", placeholder "Username" ] []
+            , input [ type_ "password", placeholder "Password" ] []
+            , input
+                [ class "dialog-button"
+                , type_ "button"
+                , value "Login"
+                , onClick ShowLogin
+                ]
+                []
+            , input
+                [ class "dialog-button"
+                , type_ "submit"
+                , value "Register"
+                ]
+                []
+            ]
+        ]
     }
 
 

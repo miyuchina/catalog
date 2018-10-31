@@ -17,11 +17,61 @@ body {
     top: 50%;
     transform: translateY(-50%);
     margin: auto;
+    padding: 2em;
     width: 50%;
+    min-width: 200px;
     max-width: 400px;
-    background-color: rgba(255, 255, 255, 1);
-    border: 2px solid black;
-    box-shadow: 4px 4px #222;
+    background-color: white;
+    box-shadow: 0 0 1em gray;
+    border-radius: 2em;
+}
+
+#dialog-title {
+    margin: 0;
+}
+
+#dialog form {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+}
+
+#dialog input {
+    margin-top: 1em;
+    border: 1px solid #aaa;
+    border-radius: 0.5em;
+    padding: 0.5em;
+}
+
+#dialog input[type="text"], #dialog input[type="password"] {
+    flex: none;
+    width: 100%;
+}
+
+.dialog-button {
+    flex: 1 1 auto;
+}
+
+.dialog-button + .dialog-button {
+    margin-left: 1em;
+}
+
+#close-dialog {
+    background: #222;
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 5px gray;
+    position: absolute;
+    right: -0.5em;
+    top: -0.5em;
+    cursor: pointer;
+}
+
+#close-dialog svg {
+    margin: 3px;
 }
 
 #navbar {
@@ -196,8 +246,9 @@ body {
 }
 
 @media screen and (max-width: 500px) {
-    #dialog { width: 80%; }
     #another::after { content: ' '; }
+    .dialog-button { width: 100%; }
+    .dialog-button + .dialog-button { margin-left: 0; }
     #toolbar { display: block; }
     #search, .tool-button { display: block; width: 100%; text-align: left; }
     .tool-button { margin-top: 1em; margin-left: 1em; }
