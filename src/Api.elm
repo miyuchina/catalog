@@ -1,15 +1,28 @@
-module Api exposing (Course, CourseDetail, CourseSection, Model, Msg, emptyModel, loadCourseDetail, loadCourses, update)
+module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), emptyModel, loadCourseDetail, loadCourses, update)
 
 import Dict exposing (Dict)
+import Html exposing (Html, form, input, text)
+import Html.Attributes exposing (class, hidden, id, placeholder, type_, value)
+import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline as P
+import Json.Encode as E
 
 
 type alias Model =
     { courses : List Course
     , details : Dict Int CourseDetail
-    , error : String
+    , currentUser : String
+    , username : String
+    , password : String
+    , dialog : Dialog
+    }
+
+
+type alias Dialog =
+    { title : String
+    , content : List (Html Msg)
     }
 
 
@@ -17,13 +30,25 @@ emptyModel : Model
 emptyModel =
     { courses = []
     , details = Dict.empty
-    , error = ""
+    , currentUser = ""
+    , username = ""
+    , password = ""
+    , dialog = { title = "", content = [] }
     }
 
 
 type Msg
     = CoursesLoaded (Result Http.Error (List Course))
     | CourseDetailLoaded (Result Http.Error CourseDetail)
+    | LoginResponse (Result Http.Error UserResponse)
+    | RegisterResponse (Result Http.Error UserResponse)
+    | ClearDialog
+    | ShowLogin
+    | ShowRegister
+    | Login
+    | Register
+    | EnteredUsername String
+    | EnteredPassword String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -35,7 +60,7 @@ update msg model =
                     ( { model | courses = courses }, Cmd.none )
 
                 Err err ->
-                    ( { model | error = "error" }, Cmd.none )
+                    handleHttpError model err
 
         CourseDetailLoaded result ->
             case result of
@@ -48,7 +73,94 @@ update msg model =
                     )
 
                 Err err ->
-                    ( { model | error = "error" }, Cmd.none )
+                    handleHttpError model err
+
+        LoginResponse result ->
+            case result of
+                Ok userResponse ->
+                    case userResponse.success of
+                        True ->
+                            ( { model
+                                | currentUser = model.username
+                                , username = ""
+                                , password = ""
+                                , dialog = textDialog "Success" userResponse.msg
+                              }
+                            , Cmd.none
+                            )
+
+                        False ->
+                            ( { model
+                                | username = ""
+                                , password = ""
+                                , dialog = textDialog "Error" userResponse.msg
+                              }
+                            , Cmd.none
+                            )
+
+                Err err ->
+                    handleHttpError model err
+
+        RegisterResponse result ->
+            case result of
+                Ok userResponse ->
+                    case userResponse.success of
+                        True ->
+                            ( { model
+                                | username = ""
+                                , password = ""
+                                , dialog = textDialog "Success" userResponse.msg
+                              }
+                            , Cmd.none
+                            )
+
+                        False ->
+                            ( { model
+                                | username = ""
+                                , password = ""
+                                , dialog = textDialog "Error" userResponse.msg
+                              }
+                            , Cmd.none
+                            )
+
+                Err err ->
+                    handleHttpError model err
+
+        ShowLogin ->
+            ( { model | dialog = loginDialog }
+            , Cmd.none
+            )
+
+        ShowRegister ->
+            ( { model | dialog = registerDialog }
+            , Cmd.none
+            )
+
+        Login ->
+            ( model, login model.username model.password )
+
+        Register ->
+            ( model, register model.username model.password )
+
+        EnteredUsername username ->
+            ( { model | username = username }, Cmd.none )
+
+        EnteredPassword password ->
+            ( { model | password = password }, Cmd.none )
+
+        ClearDialog ->
+            ( { model | dialog = { title = "", content = [] } }
+            , Cmd.none
+            )
+
+
+handleHttpError : Model -> Http.Error -> ( Model, Cmd Msg )
+handleHttpError model err =
+    ( { model
+        | dialog = textDialog "Error" "Something went wrong..."
+      }
+    , Cmd.none
+    )
 
 
 type alias Course =
@@ -154,3 +266,117 @@ loadCourseDetail : Int -> Cmd Msg
 loadCourseDetail id =
     Http.send CourseDetailLoaded <|
         Http.get ("/api/course/" ++ String.fromInt id) courseDetailDecoder
+
+
+type alias UserResponse =
+    { success : Bool
+    , msg : String
+    }
+
+
+login : String -> String -> Cmd Msg
+login username password =
+    let
+        json =
+            E.object
+                [ ( "username", E.string username )
+                , ( "password", E.string password )
+                ]
+    in
+    Http.send LoginResponse <|
+        Http.post "/api/user/login" (Http.jsonBody json) userResponseDecoder
+
+
+register : String -> String -> Cmd Msg
+register username password =
+    let
+        json =
+            E.object
+                [ ( "username", E.string username )
+                , ( "password", E.string password )
+                ]
+    in
+    Http.send RegisterResponse <|
+        Http.post "/api/user/register" (Http.jsonBody json) userResponseDecoder
+
+
+userResponseDecoder : D.Decoder UserResponse
+userResponseDecoder =
+    D.map2 UserResponse
+        (D.field "success" D.bool)
+        (D.field "msg" D.string)
+
+
+textDialog : String -> String -> Dialog
+textDialog title content =
+    Dialog title [ text content ]
+
+
+loginDialog : Dialog
+loginDialog =
+    { title = "Log in"
+    , content =
+        [ form [ onSubmit Login ]
+            [ input
+                [ onInput EnteredUsername
+                , type_ "text"
+                , placeholder "Username"
+                ]
+                []
+            , input
+                [ onInput EnteredPassword
+                , type_ "password"
+                , placeholder "Password"
+                ]
+                []
+            , input
+                [ class "dialog-button"
+                , type_ "button"
+                , value "Register"
+                , onClick ShowRegister
+                ]
+                []
+            , input
+                [ class "dialog-button"
+                , type_ "submit"
+                , value "Log in"
+                ]
+                []
+            ]
+        ]
+    }
+
+
+registerDialog : Dialog
+registerDialog =
+    { title = "Register"
+    , content =
+        [ form [ onSubmit Register ]
+            [ input
+                [ onInput EnteredUsername
+                , type_ "text"
+                , placeholder "Username"
+                ]
+                []
+            , input
+                [ onInput EnteredPassword
+                , type_ "password"
+                , placeholder "Password"
+                ]
+                []
+            , input
+                [ class "dialog-button"
+                , type_ "button"
+                , value "Login"
+                , onClick ShowLogin
+                ]
+                []
+            , input
+                [ class "dialog-button"
+                , type_ "submit"
+                , value "Register"
+                ]
+                []
+            ]
+        ]
+    }

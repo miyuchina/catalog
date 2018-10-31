@@ -37,14 +37,14 @@ def login():
         username = data.get('username', None)
         password = data.get('password', None)
         if not username or not password:
-            return fail('Invalid request.')
+            return fail('Empty username or password.')
 
         user = get_db().cursor().execute(
             'SELECT * FROM user WHERE username = ?', (username,)
         ).fetchone()
 
         if user is None:
-            return fail('Empty username.')
+            return fail('No such user.')
 
         if not check_password_hash(user['password'], password):
             return fail('Wrong password.')
@@ -53,7 +53,13 @@ def login():
         session['user_id'] = user['id']
         return success(f'User {username} logged in.')
 
-    return 'user_id' in session
+    user_id = session.get('user_id', None)
+    if user_id:
+        user = get_db().cursor().execute(
+            'SELECT username FROM user WHERE id = ?', (user_id,)
+        ).fetchone()
+        return jsonify((user or {}).get('username', None))
+    return jsonify(None)
 
 
 @bp.route('/user/register', methods=('POST',))
@@ -62,7 +68,9 @@ def register():
     username = data.get('username', None)
     password = data.get('password', None)
     if not username or not password:
-        return fail('Invalid request.')
+        return fail('Empty username or password.')
+
+    db = get_db()
 
     if db.execute(
         'SELECT id FROM user WHERE username = ?', (username,)

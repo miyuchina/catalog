@@ -6,11 +6,11 @@ import Color exposing (Color, black, white)
 import Dict exposing (Dict)
 import Html exposing (Html, a, div, form, h1, input, label, li, section, span, text, ul)
 import Html.Attributes exposing (class, hidden, href, id, placeholder, type_, value)
-import Html.Events exposing (onClick, onInput, onSubmit, stopPropagationOn)
+import Html.Events exposing (onClick, onInput, stopPropagationOn)
 import Html.Lazy exposing (lazy, lazy4)
 import Json.Decode as D
 import Json.Encode as E
-import Material.Icons.Action exposing (bookmark, bookmark_border)
+import Material.Icons.Action exposing (account_circle, bookmark, bookmark_border)
 import Material.Icons.Content exposing (save)
 import Material.Icons.Image exposing (collections, collections_bookmark)
 import Material.Icons.Navigation exposing (close)
@@ -31,7 +31,6 @@ type alias Model =
     { api : Api.Model
     , page : Int
     , searchPage : Int
-    , dialog : Dialog
     , bucket : Set Int
     , expandedCourses : Set Int
     , displayMode : DisplayMode
@@ -50,18 +49,11 @@ type DisplayMode
     | Bucket
 
 
-type alias Dialog =
-    { title : String
-    , content : List (Html Msg)
-    }
-
-
 init : List Int -> ( Model, Cmd Msg )
 init bucket =
     ( { api = Api.emptyModel
       , page = 1
       , searchPage = 1
-      , dialog = { title = "", content = [] }
       , bucket = Set.fromList bucket
       , expandedCourses = Set.empty
       , displayMode = All
@@ -73,9 +65,6 @@ init bucket =
 
 type Msg
     = NoOp
-    | ShowLogin
-    | ShowRegister
-    | ClearDialog
     | LoadMore Bool
     | UserSearch String
     | ApiMsg Api.Msg
@@ -95,21 +84,6 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
-
-        ShowLogin ->
-            ( { model | dialog = loginDialog }
-            , Cmd.none
-            )
-
-        ShowRegister ->
-            ( { model | dialog = registerDialog }
-            , Cmd.none
-            )
-
-        ClearDialog ->
-            ( { model | dialog = { title = "", content = [] } }
-            , Cmd.none
-            )
 
         LoadMore _ ->
             case model.displayMode of
@@ -189,7 +163,7 @@ update msg model =
                         Cmd.none
 
                     else
-                        Cmd.map ApiMsg <| Api.loadCourseDetail course.id
+                        Cmd.map ApiMsg <| loadCourseDetail course.id
             in
             ( { model | expandedCourses = expandedCourses }, cmd )
 
@@ -203,22 +177,44 @@ view : Model -> Browser.Document Msg
 view model =
     { title = "(Another) Williams College Course Catalog"
     , body =
-        [ lazy viewDialog model.dialog
-        , viewNavbar
+        [ lazy viewDialog model.api.dialog
+        , lazy viewNavbar model.api.currentUser
         , lazy viewToolbar model.displayMode
         , viewCourses model
         ]
     }
 
 
-viewNavbar : Html Msg
-viewNavbar =
+viewNavbar : String -> Html Msg
+viewNavbar currentUser =
     div [ id "navbar" ]
         [ div [ id "navbar-inner" ]
             [ h1 []
                 [ span [ id "another" ] [ text "(ANOTHER)" ], text "CATALOG" ]
             , a [ href "/faq" ] [ text "FAQ" ]
-            , a [ href "#", onClick ShowLogin ] [ text "Login" ]
+            , a
+                [ id "login"
+                , href "#"
+                , onClick <|
+                    if String.isEmpty currentUser then
+                        ApiMsg ShowLogin
+
+                    else
+                        NoOp
+                ]
+              <|
+                if String.isEmpty currentUser then
+                    [ text "Login" ]
+
+                else
+                    [ account_circle white 24
+                    , text currentUser
+                    , div
+                        [ id "logout"
+                        , onLocalClick NoOp
+                        ]
+                        [ text "Log out" ]
+                    ]
             ]
         ]
 
@@ -228,12 +224,17 @@ viewDialog dialog =
     div
         [ id "mask"
         , hidden <| String.isEmpty dialog.title
-        , onClick ClearDialog
+        , onClick <| ApiMsg ClearDialog
         ]
         [ div [ id "dialog", onLocalClick NoOp ]
-            [ div [ id "close-dialog", onClick ClearDialog ] [ close white 24 ]
+            [ div
+                [ id "close-dialog"
+                , onClick <| ApiMsg ClearDialog
+                ]
+                [ close white 24 ]
             , h1 [ id "dialog-title" ] [ text dialog.title ]
-            , div [ id "dialog-content" ] dialog.content
+            , div [ id "dialog-content" ] <|
+                List.map (Html.map ApiMsg) dialog.content
             ]
         ]
 
@@ -409,56 +410,6 @@ viewKeyValue ( key, values ) =
                         )
                         values
                 ]
-
-
-loginDialog : Dialog
-loginDialog =
-    { title = "Log in"
-    , content =
-        [ form [ onSubmit NoOp ]
-            [ input [ type_ "text", placeholder "Username" ] []
-            , input [ type_ "password", placeholder "Password" ] []
-            , input
-                [ class "dialog-button"
-                , type_ "button"
-                , value "Register"
-                , onClick ShowRegister
-                ]
-                []
-            , input
-                [ class "dialog-button"
-                , type_ "submit"
-                , value "Log in"
-                ]
-                []
-            ]
-        ]
-    }
-
-
-registerDialog : Dialog
-registerDialog =
-    { title = "Register"
-    , content =
-        [ form [ onSubmit NoOp ]
-            [ input [ type_ "text", placeholder "Username" ] []
-            , input [ type_ "password", placeholder "Password" ] []
-            , input
-                [ class "dialog-button"
-                , type_ "button"
-                , value "Login"
-                , onClick ShowLogin
-                ]
-                []
-            , input
-                [ class "dialog-button"
-                , type_ "submit"
-                , value "Register"
-                ]
-                []
-            ]
-        ]
-    }
 
 
 onLocalClick : Msg -> Html.Attribute Msg
