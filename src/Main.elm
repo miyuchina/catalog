@@ -256,7 +256,7 @@ viewToolbar displayMode =
         ]
 
 
-viewToolbarButton : Msg -> (Color -> Int -> Svg Msg) -> String -> Html Msg
+viewToolbarButton : Msg -> Icon -> String -> Html Msg
 viewToolbarButton msg icon content =
     a [ href "#", class "tool-button", onClick msg ] [ iconize icon, text content ]
 
@@ -419,7 +419,11 @@ onLocalClick msg =
             D.succeed msg
 
 
-iconize : (Color -> Int -> Svg Msg) -> Svg Msg
+type alias Icon =
+    Color -> Int -> Svg Msg
+
+
+iconize : Icon -> Svg Msg
 iconize icon =
     icon black 16
 
