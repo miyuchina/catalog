@@ -111,7 +111,7 @@ body {
 }
 
 #navbar a:hover {
-    text-decoration: underline;
+    color: #aaa;
 }
 
 #navbar a+a {
@@ -122,16 +122,18 @@ body {
     z-index: 1;
     background-color: #222;
     width: 5em;
-    position: absolute;
-    right: 3%;
+    position: relative;
+    right: 20px;
     text-align: center;
     border-radius: 0 0 0.5em 0.5em;
     margin-top: -0.3em;
+    margin-right: -3em;
     display: none;
 }
 
 #login:hover #logout {
     display: block;
+    color: white;
 }
 
 #another {

@@ -59,7 +59,9 @@ init bucket =
       , displayMode = All
       , searchResults = []
       }
-    , Cmd.map ApiMsg loadCourses
+    , [ loadCourses, checkLogin ]
+        |> List.map (Cmd.map ApiMsg)
+        |> Cmd.batch
     )
 
 
@@ -211,7 +213,7 @@ viewNavbar currentUser =
                     , text currentUser
                     , div
                         [ id "logout"
-                        , onLocalClick NoOp
+                        , onLocalClick <| ApiMsg Logout
                         ]
                         [ text "Log out" ]
                     ]

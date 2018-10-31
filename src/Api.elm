@@ -1,4 +1,4 @@
-module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), emptyModel, loadCourseDetail, loadCourses, update)
+module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), checkLogin, emptyModel, loadCourseDetail, loadCourses, update)
 
 import Dict exposing (Dict)
 import Html exposing (Html, form, input, text)
@@ -42,11 +42,14 @@ type Msg
     | CourseDetailLoaded (Result Http.Error CourseDetail)
     | LoginResponse (Result Http.Error UserResponse)
     | RegisterResponse (Result Http.Error UserResponse)
+    | LoginStatusResponse (Result Http.Error (Maybe String))
+    | LogoutResponse (Result Http.Error UserResponse)
     | ClearDialog
     | ShowLogin
     | ShowRegister
     | Login
     | Register
+    | Logout
     | EnteredUsername String
     | EnteredPassword String
 
@@ -126,6 +129,32 @@ update msg model =
                 Err err ->
                     handleHttpError model err
 
+        LoginStatusResponse result ->
+            case result of
+                Ok res ->
+                    case res of
+                        Just currentUser ->
+                            ( { model | currentUser = currentUser }, Cmd.none )
+
+                        Nothing ->
+                            ( model, Cmd.none )
+
+                Err _ ->
+                    ( model, Cmd.none )
+
+        LogoutResponse result ->
+            case result of
+                Ok userResponse ->
+                    ( { model
+                        | dialog = textDialog "Success" userResponse.msg
+                        , currentUser = ""
+                      }
+                    , Cmd.none
+                    )
+
+                Err err ->
+                    handleHttpError model err
+
         ShowLogin ->
             ( { model | dialog = loginDialog }
             , Cmd.none
@@ -141,6 +170,9 @@ update msg model =
 
         Register ->
             ( model, register model.username model.password )
+
+        Logout ->
+            ( model, logout )
 
         EnteredUsername username ->
             ( { model | username = username }, Cmd.none )
@@ -300,6 +332,18 @@ register username password =
     in
     Http.send RegisterResponse <|
         Http.post "/api/user/register" (Http.jsonBody json) userResponseDecoder
+
+
+checkLogin : Cmd Msg
+checkLogin =
+    Http.send LoginStatusResponse <|
+        Http.get "/api/user/login" (D.nullable D.string)
+
+
+logout : Cmd Msg
+logout =
+    Http.send LogoutResponse <|
+        Http.post "/api/user/logout" Http.emptyBody userResponseDecoder
 
 
 userResponseDecoder : D.Decoder UserResponse
