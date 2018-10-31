@@ -44,12 +44,13 @@ def main():
             cursor.execute(
                 """
                 INSERT INTO section
-                    (instr, tp, type, course_id)
-                VALUES (?, ?, ?, ?)
+                    (instr, tp, type, nbr, course_id)
+                VALUES (?, ?, ?, ?, ?)
                 """,
                 (unlist(section['instr']),
                  unlist(section['tp']),
                  section['type'],
+                 section['nbr'],
                  course_id)
             )
     db.commit()

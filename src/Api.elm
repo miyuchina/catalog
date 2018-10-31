@@ -210,6 +210,7 @@ type alias CourseSection =
     { type_ : String
     , instr : List String
     , tp : List String
+    , nbr : Int
     }
 
 
@@ -249,6 +250,7 @@ courseSectionDecoder =
         |> P.required "type" D.string
         |> P.required "instr" listify
         |> P.required "tp" listify
+        |> P.required "nbr" D.int
 
 
 listify : D.Decoder (List String)

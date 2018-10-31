@@ -39,7 +39,8 @@ async def find_course(url):
     try:
         c_sections = await parse_sections(soup.select('.Rtable-cell.classes')[1:],
                                           soup.select('.Rtable-cell.instructors')[1:],
-                                          soup.select('.Rtable-cell.times')[1:])
+                                          soup.select('.Rtable-cell.times')[1:],
+                                          soup.select('.Rtable-cell.Nbr')[1:])
     except AttributeError:
         return None
     return make_course()
@@ -92,14 +93,15 @@ async def parse_label_value(entry):
     return {name: value}
 
 
-async def parse_sections(class_tags, instructor_tags, time_tags):
+async def parse_sections(class_tags, instructor_tags, time_tags, nbr_tags):
     sections = []
-    for class_tag, instructor_tag, time_tag in zip(class_tags, instructor_tags, time_tags):
+    for class_tag, instructor_tag, time_tag, nbr_tag in zip(class_tags, instructor_tags, time_tags, nbr_tags):
         s_type = list(class_tag.children)[-1].strip().split(maxsplit=1)[0]
         s_instr = [a.text.strip() for a in instructor_tag.span.find_all('a')]
         s_tp = [el.replace('<br/>', '').strip()
                 for el in time_tag.span.decode_contents().strip().split('<hr/>')]
-        sections.append({'type': s_type, 'instr': s_instr, 'tp': s_tp})
+        s_nbr = int(nbr_tag.text.strip())
+        sections.append({'type': s_type, 'instr': s_instr, 'tp': s_tp, 'nbr': s_nbr})
     return sections
 
 

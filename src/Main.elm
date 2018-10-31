@@ -378,6 +378,7 @@ viewCourseSection section =
         [ ( "Section Type", [ section.type_ ] )
         , ( "Time", section.tp )
         , ( "Instructors", section.instr )
+        , ( "Class Number", [ String.fromInt section.nbr ] )
         ]
 
 

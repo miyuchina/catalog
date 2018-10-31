@@ -42,5 +42,6 @@ CREATE TABLE section (
     instr TEXT,
     tp    TEXT,
     type  TEXT,
+    nbr   INTEGER,
     course_id INTEGER NOT NULL
 );
