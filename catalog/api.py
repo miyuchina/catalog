@@ -135,6 +135,21 @@ def bucket(name):
     return success(f"Loaded bucket {name}!", **bucket)
 
 
+@bp.route('/user/buckets')
+def buckets():
+    user_id = session.get('user_id', None)
+    if not user_id:
+        return fail("You are not logged in!", names=[])
+    buckets = get_db().execute(
+        """
+        SELECT name FROM bucket WHERE user_id = ?
+        """,
+        (user_id,)
+    ).fetchall()
+    return success('Here are your buckets!', names=[bucket['name'] for bucket in buckets])
+
+
+
 def success(msg, **kwargs):
     return jsonify({'success': True, 'msg': msg, **kwargs})
 

@@ -214,11 +214,15 @@ viewNavbar currentUser =
                 else
                     [ account_circle white 24
                     , text currentUser
-                    , div
-                        [ id "logout"
-                        , onLocalClick <| ApiMsg Logout
+                    , div [ id "dropdown" ]
+                        [ span
+                            [ onLocalClick <| ApiMsg ShowUserBuckets ]
+                            [ text "My buckets" ]
+                        , span
+                            [ onLocalClick <| ApiMsg Logout
+                            ]
+                            [ text "Log out" ]
                         ]
-                        [ text "Log out" ]
                     ]
             ]
         ]

@@ -1,7 +1,7 @@
 module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), checkLogin, emptyModel, loadCourseDetail, loadCourses, setBucket, update)
 
 import Dict exposing (Dict)
-import Html exposing (Html, form, input, text)
+import Html exposing (Html, a, form, input, text)
 import Html.Attributes exposing (class, hidden, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
@@ -56,16 +56,19 @@ type Msg
     | LogoutResponse (Result Http.Error UserResponse)
     | LoadBucketResponse (Result Http.Error BucketResponse)
     | SaveBucketResponse (Result Http.Error BucketResponse)
+    | UserBucketsResponse (Result Http.Error UserBuckets)
     | ClearDialog
     | ShowLogin
     | ShowRegister
     | ShowSaveBucket
     | ShowLoadBucket
+    | ShowUserBuckets
     | Login
     | Register
     | Logout
     | SaveBucket
     | LoadBucket
+    | LoadBucketWithName String
     | EnteredUsername String
     | EnteredPassword String
     | EnteredBucketName String
@@ -194,6 +197,29 @@ update msg model =
                 Err err ->
                     handleHttpError model err
 
+        UserBucketsResponse result ->
+            case result of
+                Ok response ->
+                    case response.success of
+                        True ->
+                            ( { model
+                                | dialog =
+                                    userBucketsDialog model.currentUser response.names
+                              }
+                            , Cmd.none
+                            )
+
+                        False ->
+                            ( { model
+                                | dialog = textDialog "Error" response.msg
+                                , bucketName = ""
+                              }
+                            , Cmd.none
+                            )
+
+                Err err ->
+                    handleHttpError model err
+
         LoadBucketResponse result ->
             case result of
                 Ok bucketResponse ->
@@ -237,6 +263,9 @@ update msg model =
             , Cmd.none
             )
 
+        ShowUserBuckets ->
+            ( model, showUserBuckets )
+
         Login ->
             ( model, login model.username model.password )
 
@@ -251,6 +280,9 @@ update msg model =
 
         LoadBucket ->
             ( model, loadBucket model.bucketName )
+
+        LoadBucketWithName name ->
+            ( model, loadBucket name )
 
         EnteredUsername username ->
             ( { model | username = username }, Cmd.none )
@@ -441,6 +473,13 @@ type alias BucketResponse =
     }
 
 
+type alias UserBuckets =
+    { success : Bool
+    , msg : String
+    , names : List String
+    }
+
+
 saveBucket : String -> Set Int -> Cmd Msg
 saveBucket name bucket =
     let
@@ -464,6 +503,12 @@ loadBucket name =
         Http.get ("/api/bucket/" ++ name) bucketResponseDecoder
 
 
+showUserBuckets : Cmd Msg
+showUserBuckets =
+    Http.send UserBucketsResponse <|
+        Http.get "/api/user/buckets" userBucketsDecoder
+
+
 bucketResponseDecoder : D.Decoder BucketResponse
 bucketResponseDecoder =
     let
@@ -483,6 +528,13 @@ bucketResponseDecoder =
                 )
                 D.string
         )
+
+
+userBucketsDecoder =
+    D.map3 UserBuckets
+        (D.field "success" D.bool)
+        (D.field "msg" D.string)
+        (D.field "names" (D.list D.string))
 
 
 textDialog : String -> String -> Dialog
@@ -601,4 +653,14 @@ loadBucketDialog =
                 []
             ]
         ]
+    }
+
+
+userBucketsDialog : String -> List String -> Dialog
+userBucketsDialog username names =
+    { title = username ++ "'s buckets"
+    , content =
+        List.map
+            (\name -> a [ onClick <| LoadBucketWithName name ] [ text name ])
+            names
     }

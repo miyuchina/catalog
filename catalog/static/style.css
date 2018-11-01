@@ -56,6 +56,12 @@ body {
     margin-left: 1em;
 }
 
+#dialog-content a {
+    display: block;
+    margin-top: 1em;
+    cursor: pointer;
+}
+
 #close-dialog {
     background: #222;
     display: inline-block;
@@ -105,33 +111,35 @@ body {
 }
 
 #navbar a {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     color: white;
     text-decoration: none;
+    margin-left: 1em;
 }
 
 #navbar a:hover {
     color: #aaa;
 }
 
-#navbar a+a {
-    margin-left: 1em;
-}
-
-#logout {
+#dropdown {
     z-index: 1;
     background-color: #222;
-    width: 5em;
     position: relative;
-    right: 20px;
-    text-align: center;
+    right: 3em;
+    text-align: right;
     border-radius: 0 0 0.5em 0.5em;
+    padding: 0.5em 1em;
     margin-top: -0.3em;
-    margin-right: -3em;
+    margin-right: -4em;
     display: none;
+    line-height: 2em;
 }
 
-#login:hover #logout {
+#dropdown span {
+    display: block;
+}
+
+#login:hover #dropdown {
     display: block;
     color: white;
 }
