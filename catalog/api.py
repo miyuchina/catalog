@@ -115,8 +115,7 @@ def bucket(name):
 
         cursor.execute(
             """
-            INSERT INTO bucket (name, courses, user_id) VALUES (?, ?, ?)
-                ON CONFLICT (name) DO UPDATE SET courses=excluded.courses
+            INSERT OR REPLACE INTO bucket (name, courses, user_id) VALUES (?, ?, ?)
             """,
             (name, courses, user_id)
         )
