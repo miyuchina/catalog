@@ -7,20 +7,25 @@ def main():
 
     db = sqlite3.connect('app.sqlite')
     cursor = db.cursor()
-    with open('lib/schema.sql', 'r') as fin:
-        cursor.executescript(fin.read())
-    db.commit()
+    #with open('lib/schema.sql', 'r') as fin:
+    #    cursor.executescript(fin.read())
+    #db.commit()
 
     for course in courses:
         cursor.execute(
             '''
-            INSERT INTO course
-                (dept, title, code, desc, deptnote, distnote, divattr,
+            INSERT OR REPLACE INTO course
+                (id, dept, title, code, desc, deptnote, distnote, divattr,
                  dreqs, enrollmentpref, expected, limit_, matlfee, prerequisites,
                  rqmtseval, type, instr, extrainfo)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (
+                (SELECT id FROM course WHERE dept = ? AND code = ?),
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            )
             ''',
             (course['dept'],
+             course['code'],
+             course['dept'],
              course['title'],
              course['code'],
              course['desc'],

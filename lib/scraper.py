@@ -97,12 +97,19 @@ async def parse_sections(class_tags, instructor_tags, time_tags, nbr_tags):
     sections = []
     for class_tag, instructor_tag, time_tag, nbr_tag in zip(class_tags, instructor_tags, time_tags, nbr_tags):
         s_type = list(class_tag.children)[-1].strip().split(maxsplit=1)[0]
-        s_instr = [a.text.strip() for a in instructor_tag.span.find_all('a')]
+        s_instr = list(filter(None, [parse_instr(child) for child in instructor_tag.span.children]))
         s_tp = [el.replace('<br/>', '').strip()
                 for el in time_tag.span.decode_contents().strip().split('<hr/>')]
         s_nbr = int(nbr_tag.text.strip())
         sections.append({'type': s_type, 'instr': s_instr, 'tp': s_tp, 'nbr': s_nbr})
     return sections
+
+
+def parse_instr(span):
+    try:
+        return span.strip()
+    except:
+        return span.text.strip()
 
 
 def parse_class_format(value):
