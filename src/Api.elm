@@ -1,7 +1,7 @@
 module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), checkLogin, emptyModel, loadCourseDetail, loadCourses, setBucket, update)
 
 import Dict exposing (Dict)
-import Html exposing (Html, a, form, input, text)
+import Html exposing (Html, a, form, input, p, text)
 import Html.Attributes exposing (class, hidden, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
@@ -547,7 +547,9 @@ loginDialog =
     { title = "Log in"
     , content =
         [ form [ onSubmit Login ]
-            [ input
+            [ p []
+                [ text "You cannot use your Williams account here..." ]
+            , input
                 [ onInput EnteredUsername
                 , type_ "text"
                 , placeholder "Username"
@@ -614,7 +616,7 @@ registerDialog =
 
 saveBucketDialog : Dialog
 saveBucketDialog =
-    { title = "Save Bucket"
+    { title = "Save bucket"
     , content =
         [ form [ onSubmit SaveBucket ]
             [ input

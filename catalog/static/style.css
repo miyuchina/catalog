@@ -30,6 +30,10 @@ body {
     margin: 0 0 0.2em 0;
 }
 
+#dialog p {
+    margin-bottom: 0.5em;
+}
+
 #dialog form {
     display: flex;
     flex-wrap: wrap;
