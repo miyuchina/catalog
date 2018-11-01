@@ -31,7 +31,6 @@ type alias Model =
     { api : Api.Model
     , page : Int
     , searchPage : Int
-    , bucket : Set Int
     , expandedCourses : Set Int
     , displayMode : DisplayMode
     , searchResults : List Api.Course
@@ -51,10 +50,9 @@ type DisplayMode
 
 init : List Int -> ( Model, Cmd Msg )
 init bucket =
-    ( { api = Api.emptyModel
+    ( { api = Set.fromList bucket |> setBucket emptyModel
       , page = 1
       , searchPage = 1
-      , bucket = Set.fromList bucket
       , expandedCourses = Set.empty
       , displayMode = All
       , searchResults = []
@@ -143,13 +141,18 @@ update msg model =
         ToggleInBucket course ->
             let
                 bucket =
-                    if Set.member course.id model.bucket then
-                        Set.remove course.id model.bucket
+                    if Set.member course.id model.api.bucket then
+                        Set.remove course.id model.api.bucket
 
                     else
-                        Set.insert course.id model.bucket
+                        Set.insert course.id model.api.bucket
             in
-            ( { model | bucket = bucket }, localBucket <| E.set E.int bucket )
+            ( { model
+                | api =
+                    setBucket model.api bucket
+              }
+            , localBucket <| E.set E.int bucket
+            )
 
         ToggleCourse course ->
             let
@@ -261,8 +264,8 @@ viewToolbar displayMode =
             ]
             []
         , viewToolbarButton ToggleBucket collections_bookmark bucketText
-        , viewToolbarButton NoOp save "Save bucket"
-        , viewToolbarButton NoOp collections "Go to..."
+        , viewToolbarButton (ApiMsg ShowSaveBucket) save "Save bucket"
+        , viewToolbarButton (ApiMsg ShowLoadBucket) collections "Go to..."
         ]
 
 
@@ -276,7 +279,7 @@ viewCourses model =
     div [ id "courses" ] <|
         List.map
             (\c ->
-                lazy4 viewCourse model.bucket model.expandedCourses model.api.details c
+                lazy4 viewCourse model.api.bucket model.expandedCourses model.api.details c
             )
         <|
             case model.displayMode of
@@ -288,7 +291,7 @@ viewCourses model =
 
                 Bucket ->
                     List.filter
-                        (\course -> Set.member course.id model.bucket)
+                        (\course -> Set.member course.id model.api.bucket)
                         model.api.courses
 
 

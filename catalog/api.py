@@ -91,9 +91,53 @@ def logout():
     return success('You are logged out.')
 
 
-def success(msg):
-    return jsonify({'success': True, 'msg': msg})
+@bp.route('/bucket/<name>', methods=('GET', 'POST'))
+def bucket(name):
+    empty_bucket = {"id": 0, "name": "", "courses": ""}
+    if request.method == 'POST':
+        data = (request.get_json() or {})
+        courses = data.get('courses', None)
+        if not courses:
+            return fail("That's an empty bucket!", **empty_bucket)
+
+        db = get_db()
+        cursor = db.cursor()
+        user_id = session.get('user_id', None)
+        if not user_id:
+            return fail("You are not logged in!", **empty_bucket)
+
+        user = cursor.execute(
+            'SELECT user_id FROM bucket WHERE name = ?', (name,)
+        ).fetchone()
+
+        if user is not None and user['user_id'] != user_id:
+            return fail("You don't have permission to save to this bucket!", bucket_id=0)
+
+        cursor.execute(
+            """
+            INSERT INTO bucket (name, courses, user_id) VALUES (?, ?, ?)
+                ON CONFLICT (name) DO UPDATE SET courses=excluded.courses
+            """,
+            (name, courses, user_id)
+        )
+        bucket_id = cursor.lastrowid
+        db.commit()
+        return success(
+            f"Saved to bucket {name}!",
+            **{"id": bucket_id, "name": name, "courses": courses}
+        )
+
+    bucket = get_db().execute(
+        'SELECT id, name, courses FROM bucket WHERE name = ?', (name,)
+    ).fetchone()
+    if bucket is None:
+        return fail("No such bucket!", **empty_bucket)
+    return success(f"Loaded bucket {name}!", **bucket)
 
 
-def fail(msg):
-    return jsonify({'success': False, 'msg': msg})
+def success(msg, **kwargs):
+    return jsonify({'success': True, 'msg': msg, **kwargs})
+
+
+def fail(msg, **kwargs):
+    return jsonify({'success': False, 'msg': msg, **kwargs})

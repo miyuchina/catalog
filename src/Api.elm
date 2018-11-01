@@ -1,4 +1,4 @@
-module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), checkLogin, emptyModel, loadCourseDetail, loadCourses, update)
+module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), checkLogin, emptyModel, loadCourseDetail, loadCourses, setBucket, update)
 
 import Dict exposing (Dict)
 import Html exposing (Html, form, input, text)
@@ -8,6 +8,7 @@ import Http
 import Json.Decode as D
 import Json.Decode.Pipeline as P
 import Json.Encode as E
+import Set exposing (Set)
 
 
 type alias Model =
@@ -16,6 +17,8 @@ type alias Model =
     , currentUser : String
     , username : String
     , password : String
+    , bucketName : String
+    , bucket : Set Int
     , dialog : Dialog
     }
 
@@ -33,8 +36,15 @@ emptyModel =
     , currentUser = ""
     , username = ""
     , password = ""
+    , bucketName = ""
+    , bucket = Set.empty
     , dialog = { title = "", content = [] }
     }
+
+
+setBucket : Model -> Set Int -> Model
+setBucket model bucket =
+    { model | bucket = bucket }
 
 
 type Msg
@@ -44,14 +54,21 @@ type Msg
     | RegisterResponse (Result Http.Error UserResponse)
     | LoginStatusResponse (Result Http.Error (Maybe String))
     | LogoutResponse (Result Http.Error UserResponse)
+    | LoadBucketResponse (Result Http.Error BucketResponse)
+    | SaveBucketResponse (Result Http.Error BucketResponse)
     | ClearDialog
     | ShowLogin
     | ShowRegister
+    | ShowSaveBucket
+    | ShowLoadBucket
     | Login
     | Register
     | Logout
+    | SaveBucket
+    | LoadBucket
     | EnteredUsername String
     | EnteredPassword String
+    | EnteredBucketName String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -155,6 +172,51 @@ update msg model =
                 Err err ->
                     handleHttpError model err
 
+        SaveBucketResponse result ->
+            case result of
+                Ok bucketResponse ->
+                    case bucketResponse.success of
+                        True ->
+                            ( { model
+                                | dialog = textDialog "Success" bucketResponse.msg
+                              }
+                            , Cmd.none
+                            )
+
+                        False ->
+                            ( { model
+                                | dialog = textDialog "Error" bucketResponse.msg
+                                , bucketName = ""
+                              }
+                            , Cmd.none
+                            )
+
+                Err err ->
+                    handleHttpError model err
+
+        LoadBucketResponse result ->
+            case result of
+                Ok bucketResponse ->
+                    case bucketResponse.success of
+                        True ->
+                            ( { model
+                                | dialog = textDialog "Success" bucketResponse.msg
+                                , bucket = bucketResponse.courses
+                              }
+                            , Cmd.none
+                            )
+
+                        False ->
+                            ( { model
+                                | dialog = textDialog "Error" bucketResponse.msg
+                                , bucketName = ""
+                              }
+                            , Cmd.none
+                            )
+
+                Err err ->
+                    handleHttpError model err
+
         ShowLogin ->
             ( { model | dialog = loginDialog }
             , Cmd.none
@@ -162,6 +224,16 @@ update msg model =
 
         ShowRegister ->
             ( { model | dialog = registerDialog }
+            , Cmd.none
+            )
+
+        ShowSaveBucket ->
+            ( { model | dialog = saveBucketDialog }
+            , Cmd.none
+            )
+
+        ShowLoadBucket ->
+            ( { model | dialog = loadBucketDialog }
             , Cmd.none
             )
 
@@ -174,11 +246,20 @@ update msg model =
         Logout ->
             ( model, logout )
 
+        SaveBucket ->
+            ( model, saveBucket model.bucketName model.bucket )
+
+        LoadBucket ->
+            ( model, loadBucket model.bucketName )
+
         EnteredUsername username ->
             ( { model | username = username }, Cmd.none )
 
         EnteredPassword password ->
             ( { model | password = password }, Cmd.none )
+
+        EnteredBucketName bucketName ->
+            ( { model | bucketName = bucketName }, Cmd.none )
 
         ClearDialog ->
             ( { model | dialog = { title = "", content = [] } }
@@ -353,6 +434,57 @@ userResponseDecoder =
         (D.field "msg" D.string)
 
 
+type alias BucketResponse =
+    { success : Bool
+    , msg : String
+    , courses : Set Int
+    }
+
+
+saveBucket : String -> Set Int -> Cmd Msg
+saveBucket name bucket =
+    let
+        bucketString =
+            Set.toList bucket
+                |> List.map String.fromInt
+                |> String.join ";;"
+
+        json =
+            E.object [ ( "courses", E.string bucketString ) ]
+    in
+    Http.send SaveBucketResponse <|
+        Http.post ("/api/bucket/" ++ name)
+            (Http.jsonBody json)
+            bucketResponseDecoder
+
+
+loadBucket : String -> Cmd Msg
+loadBucket name =
+    Http.send LoadBucketResponse <|
+        Http.get ("/api/bucket/" ++ name) bucketResponseDecoder
+
+
+bucketResponseDecoder : D.Decoder BucketResponse
+bucketResponseDecoder =
+    let
+        toIntOrZero s =
+            String.toInt s
+                |> Maybe.withDefault 0
+    in
+    D.map3 BucketResponse
+        (D.field "success" D.bool)
+        (D.field "msg" D.string)
+        (D.field "courses" <|
+            D.map
+                (\s ->
+                    String.split ";;" s
+                        |> List.map toIntOrZero
+                        |> Set.fromList
+                )
+                D.string
+        )
+
+
 textDialog : String -> String -> Dialog
 textDialog title content =
     Dialog title [ text content ]
@@ -421,6 +553,50 @@ registerDialog =
                 [ class "dialog-button"
                 , type_ "submit"
                 , value "Register"
+                ]
+                []
+            ]
+        ]
+    }
+
+
+saveBucketDialog : Dialog
+saveBucketDialog =
+    { title = "Save Bucket"
+    , content =
+        [ form [ onSubmit SaveBucket ]
+            [ input
+                [ onInput EnteredBucketName
+                , type_ "text"
+                , placeholder "Name your bucket!"
+                ]
+                []
+            , input
+                [ class "dialog-button"
+                , type_ "submit"
+                , value "Save"
+                ]
+                []
+            ]
+        ]
+    }
+
+
+loadBucketDialog : Dialog
+loadBucketDialog =
+    { title = "Go to bucket..."
+    , content =
+        [ form [ onSubmit LoadBucket ]
+            [ input
+                [ onInput EnteredBucketName
+                , type_ "text"
+                , placeholder "Which bucket do you want?"
+                ]
+                []
+            , input
+                [ class "dialog-button"
+                , type_ "submit"
+                , value "Visit bucket"
                 ]
                 []
             ]
