@@ -546,10 +546,9 @@ loginDialog : Dialog
 loginDialog =
     { title = "Log in"
     , content =
-        [ form [ onSubmit Login ]
-            [ p []
-                [ text "You cannot use your Williams account here..." ]
-            , input
+        [ p [] [ text "You cannot use your Williams account here..." ]
+        , form [ onSubmit Login ]
+            [ input
                 [ onInput EnteredUsername
                 , type_ "text"
                 , placeholder "Username"
