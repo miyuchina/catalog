@@ -48,11 +48,15 @@ def main():
         for section in course['sections']:
             cursor.execute(
                 """
-                INSERT INTO section
-                    (instr, tp, type, nbr, course_id)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT OR REPLACE INTO section
+                    (id, instr, tp, type, nbr, course_id)
+                VALUES (
+                    (SELECT id FROM section WHERE nbr = ?),
+                    ?, ?, ?, ?, ?
+                )
                 """,
-                (unlist(section['instr']),
+                (section['nbr'],
+                 unlist(section['instr']),
                  unlist(section['tp']),
                  section['type'],
                  section['nbr'],
