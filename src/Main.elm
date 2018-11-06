@@ -110,7 +110,7 @@ update msg model =
                         , searchResults =
                             List.filter
                                 (matchCourse <| String.toLower searchTerm)
-                                (Api.getLoadedCourses model.api)
+                                model.api.courses
                       }
                     , Cmd.none
                     )
@@ -196,22 +196,8 @@ update msg model =
 
                         _ ->
                             UnknownTerm
-
-                oldApi =
-                    model.api
-
-                api =
-                    { oldApi | term = term }
-
-                cmd =
-                    case Dict.member termString api.courses of
-                        True ->
-                            Cmd.none
-
-                        False ->
-                            Cmd.map ApiMsg <| loadCourses term
             in
-            ( { model | api = api }, cmd )
+            ( model, Cmd.map ApiMsg <| loadCourses term )
 
 
 subscriptions : Model -> Sub Msg
@@ -334,7 +320,7 @@ viewCourses model =
         courses =
             case model.displayMode of
                 All ->
-                    List.take (model.page * perPage) (Api.getLoadedCourses model.api)
+                    List.take (model.page * perPage) model.api.courses
 
                 Search ->
                     List.take (model.searchPage * perPage) model.searchResults
@@ -342,7 +328,7 @@ viewCourses model =
                 Bucket ->
                     List.filter
                         (\course -> Set.member course.id model.api.bucket)
-                        (Api.getLoadedCourses model.api)
+                        model.api.courses
     in
     case courses of
         [] ->
