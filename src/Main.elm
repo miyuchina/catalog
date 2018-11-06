@@ -118,8 +118,19 @@ update msg model =
             let
                 ( apiModel, apiCmd ) =
                     Api.update apiMsg model.api
+
+                displayMode =
+                    case apiMsg of
+                        LoadBucket ->
+                            Bucket
+
+                        LoadBucketWithName _ ->
+                            Bucket
+
+                        _ ->
+                            model.displayMode
             in
-            ( { model | api = apiModel }
+            ( { model | api = apiModel, displayMode = displayMode }
             , Cmd.map ApiMsg apiCmd
             )
 
