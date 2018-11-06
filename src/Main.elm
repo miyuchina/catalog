@@ -280,7 +280,7 @@ viewToolbar displayMode =
             []
         , viewToolbarButton ToggleBucket collections_bookmark bucketText
         , viewToolbarButton (ApiMsg ShowSaveBucket) save "Save bucket"
-        , viewToolbarButton (ApiMsg ShowLoadBucket) collections "Go to..."
+        , viewToolbarButton (ApiMsg ShowLoadBucket) collections "Go to bucket"
         ]
 
 

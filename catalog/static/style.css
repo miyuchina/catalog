@@ -162,14 +162,19 @@ body {
     width: 90%;
     max-width: 800px;
     display: flex;
+    flex-wrap: wrap;
 }
 
 .tool-button {
     flex: none;
-    margin: auto 0 auto 2em;
+    margin: 1em 0 auto 20px;
     font-weight: bolder;
     color: #222;
     text-decoration: none;
+}
+
+.tool-button + .tool-button {
+    margin-left: 2em;
 }
 
 .tool-button svg {
@@ -186,6 +191,7 @@ body {
     border: 1px solid #aaa;
     padding: 0.5em;
     border-radius: 0.5em;
+    width: 100%;
 }
 
 #courses {
@@ -272,10 +278,6 @@ body {
 
 @media screen and (min-width: 501px) and (max-width: 650px) {
     #another::after { content: ' '; }
-    #toolbar { flex-wrap: wrap; }
-    #search { width: 100%; }
-    .tool-button { margin-top: 1em; margin-left: 20px; }
-    .tool-button + .tool-button { margin-top: 1em; margin-left: 2em; }
 }
 
 @media screen and (max-width: 500px) {
@@ -284,7 +286,7 @@ body {
     .dialog-button + .dialog-button { margin-left: 0; }
     #toolbar { display: block; }
     #search, .tool-button { display: block; width: 100%; text-align: left; }
-    .tool-button { margin-top: 1em; margin-left: 1em; }
+    .tool-button, .tool-button + .tool-button { margin-left: 1em; }
     .course-header { display: block; margin-bottom: 0.5em; margin-left: 1em; padding-left: 0;}
     .course-header > span { display: block; }
     .course-instr { text-align: left; }
