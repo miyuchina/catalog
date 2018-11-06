@@ -1,4 +1,4 @@
-module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), checkLogin, emptyModel, loadCourseDetail, loadCourses, setBucket, update)
+module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), Term(..), checkLogin, emptyModel, getLoadedCourses, loadCourseDetail, loadCourses, setBucket, update)
 
 import Dict exposing (Dict)
 import Html exposing (Html, a, form, input, p, text)
@@ -12,7 +12,8 @@ import Set exposing (Set)
 
 
 type alias Model =
-    { courses : List Course
+    { courses : Dict String (List Course)
+    , term : Term
     , details : Dict Int CourseDetail
     , currentUser : String
     , username : String
@@ -31,7 +32,8 @@ type alias Dialog =
 
 emptyModel : Model
 emptyModel =
-    { courses = []
+    { courses = Dict.empty
+    , term = W2018
     , details = Dict.empty
     , currentUser = ""
     , username = ""
@@ -42,13 +44,31 @@ emptyModel =
     }
 
 
+getLoadedCourses : Model -> List Course
+getLoadedCourses model =
+    let
+        termString =
+            case model.term of
+                W2018 ->
+                    "winter-2018"
+
+                S2019 ->
+                    "spring-2019"
+
+                _ ->
+                    ""
+    in
+    Dict.get termString model.courses
+        |> Maybe.withDefault []
+
+
 setBucket : Model -> Set Int -> Model
 setBucket model bucket =
     { model | bucket = bucket }
 
 
 type Msg
-    = CoursesLoaded (Result Http.Error (List Course))
+    = CoursesLoaded String (Result Http.Error (List Course))
     | CourseDetailLoaded (Result Http.Error CourseDetail)
     | LoginResponse (Result Http.Error UserResponse)
     | RegisterResponse (Result Http.Error UserResponse)
@@ -77,10 +97,10 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        CoursesLoaded result ->
+        CoursesLoaded termString result ->
             case result of
                 Ok courses ->
-                    ( { model | courses = courses }, Cmd.none )
+                    ( { model | courses = Dict.insert termString courses model.courses }, Cmd.none )
 
                 Err err ->
                     handleHttpError model err
@@ -359,6 +379,12 @@ type alias CourseSection =
     }
 
 
+type Term
+    = S2019
+    | W2018
+    | UnknownTerm
+
+
 courseDecoder : D.Decoder Course
 courseDecoder =
     D.succeed makeCourse
@@ -403,10 +429,22 @@ listify =
     D.map (String.split ";;") D.string
 
 
-loadCourses : Cmd Msg
-loadCourses =
-    Http.send CoursesLoaded <|
-        Http.get "/api/courses" (D.list courseDecoder)
+loadCourses : Term -> Cmd Msg
+loadCourses term =
+    let
+        termString =
+            case term of
+                W2018 ->
+                    "winter-2018"
+
+                S2019 ->
+                    "spring-2019"
+
+                _ ->
+                    ""
+    in
+    Http.send (CoursesLoaded termString) <|
+        Http.get ("/api/courses/" ++ termString) (D.list courseDecoder)
 
 
 loadCourseDetail : Int -> Cmd Msg

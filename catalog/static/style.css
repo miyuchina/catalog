@@ -165,16 +165,16 @@ body {
     flex-wrap: wrap;
 }
 
+#toolbar select {
+    margin-top: 0.8em;
+}
+
 .tool-button {
     flex: none;
-    margin: 1em 0 auto 20px;
+    margin: 1em 0 auto 2em;
     font-weight: bolder;
     color: #222;
     text-decoration: none;
-}
-
-.tool-button + .tool-button {
-    margin-left: 2em;
 }
 
 .tool-button svg {
@@ -286,7 +286,7 @@ body {
     .dialog-button + .dialog-button { margin-left: 0; }
     #toolbar { display: block; }
     #search, .tool-button { display: block; width: 100%; text-align: left; }
-    .tool-button, .tool-button + .tool-button { margin-left: 1em; }
+    .tool-button { margin-left: 1em; }
     .course-header { display: block; margin-bottom: 0.5em; margin-left: 1em; padding-left: 0;}
     .course-header > span { display: block; }
     .course-instr { text-align: left; }

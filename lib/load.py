@@ -17,10 +17,10 @@ def main():
             INSERT OR REPLACE INTO course
                 (id, dept, title, code, desc, deptnote, distnote, divattr,
                  dreqs, enrollmentpref, expected, limit_, matlfee, prerequisites,
-                 rqmtseval, type, instr, extrainfo)
+                 rqmtseval, type, instr, extrainfo, term)
             VALUES (
                 (SELECT id FROM course WHERE dept = ? AND code = ?),
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
             ''',
             (course['dept'],
@@ -41,7 +41,8 @@ def main():
              unlist(course['rqmtseval']),
              course['type'],
              unlist(set([instr for section in course['sections'] for instr in section['instr']])),
-             unlist(course['extrainfo'])
+             unlist(course['extrainfo']),
+             course['term']
             )
         )
         course_id = cursor.lastrowid

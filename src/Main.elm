@@ -4,7 +4,7 @@ import Api exposing (..)
 import Browser
 import Color exposing (Color, black, white)
 import Dict exposing (Dict)
-import Html exposing (Html, a, div, form, h1, input, label, li, section, span, text, ul)
+import Html exposing (Html, a, div, form, h1, input, label, li, option, section, select, span, text, ul)
 import Html.Attributes exposing (class, hidden, href, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput, stopPropagationOn)
 import Html.Lazy exposing (lazy, lazy4)
@@ -57,7 +57,7 @@ init bucket =
       , displayMode = All
       , searchResults = []
       }
-    , [ loadCourses, checkLogin ]
+    , [ loadCourses W2018, checkLogin ]
         |> List.map (Cmd.map ApiMsg)
         |> Cmd.batch
     )
@@ -71,6 +71,7 @@ type Msg
     | ToggleBucket
     | ToggleInBucket Api.Course
     | ToggleCourse Api.Course
+    | SelectTerm String
 
 
 port loadMore : (Bool -> msg) -> Sub msg
@@ -109,7 +110,7 @@ update msg model =
                         , searchResults =
                             List.filter
                                 (matchCourse <| String.toLower searchTerm)
-                                model.api.courses
+                                (Api.getLoadedCourses model.api)
                       }
                     , Cmd.none
                     )
@@ -182,6 +183,35 @@ update msg model =
                         Cmd.map ApiMsg <| loadCourseDetail course.id
             in
             ( { model | expandedCourses = expandedCourses }, cmd )
+
+        SelectTerm termString ->
+            let
+                term =
+                    case termString of
+                        "winter-2018" ->
+                            W2018
+
+                        "spring-2019" ->
+                            S2019
+
+                        _ ->
+                            UnknownTerm
+
+                oldApi =
+                    model.api
+
+                api =
+                    { oldApi | term = term }
+
+                cmd =
+                    case Dict.member termString api.courses of
+                        True ->
+                            Cmd.none
+
+                        False ->
+                            Cmd.map ApiMsg <| loadCourses term
+            in
+            ( { model | api = api }, cmd )
 
 
 subscriptions : Model -> Sub Msg
@@ -278,9 +308,18 @@ viewToolbar displayMode =
             , placeholder "Search anything..."
             ]
             []
+        , viewTermSelection
         , viewToolbarButton ToggleBucket collections_bookmark bucketText
         , viewToolbarButton (ApiMsg ShowSaveBucket) save "Save bucket"
         , viewToolbarButton (ApiMsg ShowLoadBucket) collections "Go to bucket"
+        ]
+
+
+viewTermSelection : Html Msg
+viewTermSelection =
+    select [ onInput <| SelectTerm ]
+        [ option [ value "winter-2018" ] [ text "Winter 2018" ]
+        , option [ value "spring-2019" ] [ text "Spring 2019" ]
         ]
 
 
@@ -291,15 +330,11 @@ viewToolbarButton msg icon content =
 
 viewCourses : Model -> Html Msg
 viewCourses model =
-    div [ id "courses" ] <|
-        List.map
-            (\c ->
-                lazy4 viewCourse model.api.bucket model.expandedCourses model.api.details c
-            )
-        <|
+    let
+        courses =
             case model.displayMode of
                 All ->
-                    List.take (model.page * perPage) model.api.courses
+                    List.take (model.page * perPage) (Api.getLoadedCourses model.api)
 
                 Search ->
                     List.take (model.searchPage * perPage) model.searchResults
@@ -307,7 +342,19 @@ viewCourses model =
                 Bucket ->
                     List.filter
                         (\course -> Set.member course.id model.api.bucket)
-                        model.api.courses
+                        (Api.getLoadedCourses model.api)
+    in
+    case courses of
+        [] ->
+            div [ id "courses" ] [ text "Nothing found! Are you in the right semester?" ]
+
+        _ ->
+            div [ id "courses" ] <|
+                List.map
+                    (\c ->
+                        lazy4 viewCourse model.api.bucket model.expandedCourses model.api.details c
+                    )
+                    courses
 
 
 viewCourse : Set Int -> Set Int -> Dict Int Api.CourseDetail -> Api.Course -> Html Msg

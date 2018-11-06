@@ -6,12 +6,10 @@ import requests_cache
 from bs4 import BeautifulSoup as Soup
 
 
-URI = "https://catalog.williams.edu/list/?kywd=&Action=Search&strm=1193&subj=&sbattr=&cn=&enrlmt=&cmp=&sttm=&endtm=&insfn=&insln="
-
 requests_cache.install_cache()
 
 
-async def find_courses(soup):
+async def find_courses(term, soup):
     courses = []
     seen = set()
     tags = soup.select('.catalog_table li')[1:]
@@ -21,12 +19,11 @@ async def find_courses(soup):
         course = await find_course(url)
         if course is not None:
             if f"{course['dept']}{course['code']}" not in seen:
+                course['term'] = term
                 courses.append(course)
                 seen.add(f"{course['dept']}{course['code']}")
             print(f'[{i} / {total}] {course["dept"]} {course["code"]} - {course["title"]}')
-
-    with open('catalog.json', 'w+') as fout:
-        json.dump(courses, fout)
+    return courses
 
 
 async def find_course(url):
@@ -47,10 +44,16 @@ async def find_course(url):
 
 
 async def parse_header(tag):
+    def textify(s):
+        try:
+            return s.text
+        except:
+            return str(s)
+
     dept = tag.a.text.strip()
     code = int(tag.a.next_sibling.strip())
     dreqs = [parse_dreq(item['class'][1]) for item in tag.span.extract().select('span')]
-    title = ''.join(str(c) for c in list(tag.children)[4:]).strip()
+    title = ''.join(textify(c) for c in list(tag.children)[4:]).strip()
     return dept, code, title, dreqs
 
 
@@ -96,7 +99,7 @@ async def parse_label_value(entry):
 async def parse_sections(class_tags, instructor_tags, time_tags, nbr_tags):
     sections = []
     for class_tag, instructor_tag, time_tag, nbr_tag in zip(class_tags, instructor_tags, time_tags, nbr_tags):
-        s_type = list(class_tag.children)[-1].strip().split(maxsplit=1)[0]
+        s_type = (list(class_tag.children)[-1].strip().split(maxsplit=1) or [''])[0]
         s_instr = list(filter(None, [parse_instr(child) for child in instructor_tag.span.children]))
         s_tp = [el.replace('<br/>', '').strip()
                 for el in time_tag.span.decode_contents().strip().split('<hr/>')]
@@ -132,10 +135,27 @@ def make_course():
     return {k[2:]: v for k, v in inspect.stack()[1].frame.f_locals.items() if k.startswith('c_')}
 
 
-def main():
-    soup = Soup(requests.get(URI).text, 'html.parser')
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(find_courses(soup))
+async def main():
+    winter_term = 1192
+    spring_term = 1193
+
+    URI = "https://catalog.williams.edu/list/?kywd=&Action=Search&strm={}&subj=&sbattr=&cn=&enrlmt=&cmp=&sttm=&endtm=&insfn=&insln="
+
+
+    soup = Soup(requests.get(URI.format(winter_term)).text, 'html.parser')
+    winter_courses = await find_courses("winter-2018", soup)
+
+    soup = Soup(requests.get(URI.format(spring_term)).text, 'html.parser')
+    spring_courses = await find_courses("spring-2019", soup)
+
+    courses = []
+    courses.extend(winter_courses)
+    courses.extend(spring_courses)
+
+    with open('catalog.json', 'w') as fout:
+        json.dump(courses, fout)
+
 
 if __name__ == '__main__':
-    main()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())

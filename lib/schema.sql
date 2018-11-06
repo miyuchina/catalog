@@ -34,7 +34,8 @@ CREATE TABLE course (
     rqmtseval      TEXT,
     extrainfo      TEXT,
     type           TEXT,
-    instr          TEXT
+    instr          TEXT,
+    term           TEXT
 );
 
 CREATE TABLE section (

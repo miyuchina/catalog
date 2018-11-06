@@ -5,10 +5,13 @@ from catalog.db import get_db
 bp = Blueprint('api', __name__, url_prefix='/api')
 
 
-@bp.route('/courses')
-def courses():
+@bp.route('/courses/<term>')
+def courses(term):
     cursor = get_db().cursor()
-    cursor.execute('SELECT id, dept, code, title, instr FROM course ORDER BY dept, code')
+    cursor.execute(
+        'SELECT id, dept, code, title, instr FROM course WHERE term = ? ORDER BY dept, code',
+        (term,)
+    )
     return jsonify(cursor.fetchall())
 
 
