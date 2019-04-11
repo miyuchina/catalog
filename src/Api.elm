@@ -360,8 +360,8 @@ type alias CourseSection =
 
 
 type Term
-    = S2019
-    | W2018
+    = F2019
+    | S2020
     | UnknownTerm
 
 
@@ -414,11 +414,11 @@ loadCourses term =
     let
         termString =
             case term of
-                W2018 ->
-                    "winter-2018"
+                F2019 ->
+                    "fall-2019"
 
-                S2019 ->
-                    "spring-2019"
+                S2020 ->
+                    "spring-2020"
 
                 _ ->
                     ""

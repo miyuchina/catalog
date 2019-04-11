@@ -57,7 +57,7 @@ init bucket =
       , displayMode = All
       , searchResults = []
       }
-    , [ loadCourses W2018, checkLogin ]
+    , [ loadCourses F2019, checkLogin ]
         |> List.map (Cmd.map ApiMsg)
         |> Cmd.batch
     )
@@ -188,11 +188,11 @@ update msg model =
             let
                 term =
                     case termString of
-                        "winter-2018" ->
-                            W2018
+                        "fall-2019" ->
+                            F2019
 
-                        "spring-2019" ->
-                            S2019
+                        "spring-2020" ->
+                            S2020
 
                         _ ->
                             UnknownTerm
@@ -304,8 +304,8 @@ viewToolbar displayMode =
 viewTermSelection : Html Msg
 viewTermSelection =
     select [ onInput <| SelectTerm ]
-        [ option [ value "winter-2018" ] [ text "Winter 2018" ]
-        , option [ value "spring-2019" ] [ text "Spring 2019" ]
+        [ option [ value "fall-2019" ] [ text "Fall 2019" ]
+        , option [ value "spring-2020" ] [ text "Spring 2020" ]
         ]
 
 
