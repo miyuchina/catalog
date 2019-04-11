@@ -50,10 +50,18 @@ async def parse_header(tag):
         except:
             return str(s)
 
-    dept = tag.a.text.strip()
-    code = int(tag.a.next_sibling.strip())
-    dreqs = [parse_dreq(item['class'][1]) for item in tag.span.extract().select('span')]
-    title = ''.join(textify(c) for c in list(tag.children)[4:]).strip()
+    dept = tag.a.extract().text.strip()
+    code = int(next(tag.children).next_sibling.extract())
+
+    dreqs = []
+    for item in tag.span.extract().select('span'):
+        try:
+            item['class'].remove('dreq')
+            dreqs.append(parse_dreq(*item['class']))
+        except ValueError:  # no dreq class, not dreq
+            pass
+
+    title = ''.join(textify(c) for c in list(tag.children)).strip()
     return dept, code, title, dreqs
 
 
@@ -136,21 +144,16 @@ def make_course():
 
 
 async def main():
-    winter_term = 1192
-    spring_term = 1193
+    fall_term = 1201
 
     URI = "https://catalog.williams.edu/list/?kywd=&Action=Search&strm={}&subj=&sbattr=&cn=&enrlmt=&cmp=&sttm=&endtm=&insfn=&insln="
 
 
-    soup = Soup(requests.get(URI.format(winter_term)).text, 'html.parser')
-    winter_courses = await find_courses("winter-2018", soup)
-
-    soup = Soup(requests.get(URI.format(spring_term)).text, 'html.parser')
-    spring_courses = await find_courses("spring-2019", soup)
+    soup = Soup(requests.get(URI.format(fall_term)).text, 'html.parser')
+    fall_courses = await find_courses("fall-2019", soup)
 
     courses = []
-    courses.extend(winter_courses)
-    courses.extend(spring_courses)
+    courses.extend(fall_courses)
 
     with open('catalog.json', 'w') as fout:
         json.dump(courses, fout)
