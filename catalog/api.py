@@ -21,8 +21,9 @@ def course(course_id):
     cursor.execute(
         """
         SELECT
-            id, desc, deptnote, distnote, divattr, dreqs, enrollmentpref, expected,
-            limit_, matlfee, prerequisites, rqmtseval, extrainfo, type
+            id, desc, passfail, fifthcourse, deptnote, distnote, divattr, dreqs,
+            enrollmentpref, expected, limit_, matlfee, prerequisites, rqmtseval,
+            extrainfo, type
         FROM course WHERE id = ?
         """,
         (course_id,)
@@ -30,6 +31,8 @@ def course(course_id):
     course = cursor.fetchone()
     cursor.execute('SELECT * FROM section WHERE course_id = ?', (course_id,))
     course['section'] = cursor.fetchall()
+    course['passfail'] = bool(course['passfail'])
+    course['fifthcourse'] = bool(course['fifthcourse'])
     return jsonify(course)
 
 

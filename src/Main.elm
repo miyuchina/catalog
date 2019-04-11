@@ -197,7 +197,7 @@ update msg model =
                         _ ->
                             UnknownTerm
             in
-            ( model, Cmd.map ApiMsg <| loadCourses term )
+            ( { model | displayMode = All }, Cmd.map ApiMsg <| loadCourses term )
 
 
 subscriptions : Model -> Sub Msg
@@ -413,6 +413,8 @@ viewCourseSpecifics detail =
             [ ( "Class Type", [ detail.type_ ] )
             , ( "Limit", [ detail.limit ] )
             , ( "Expected", [ detail.expected ] )
+            , ( "Pass / Fail Option", [ viewBool detail.passfail ] )
+            , ( "Fifth Course Option", [ viewBool detail.fifthcourse ] )
             , ( "Divisions", detail.dreqs )
             , ( "Distributions", detail.divattr )
             , ( "Distribution Notes", detail.distnote )
@@ -464,6 +466,15 @@ viewKeyValue ( key, values ) =
                         )
                         values
                 ]
+
+
+viewBool : Bool -> String
+viewBool bool =
+    if bool then
+        "yes"
+
+    else
+        "no"
 
 
 onLocalClick : Msg -> Html.Attribute Msg

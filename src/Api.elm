@@ -335,6 +335,8 @@ makeCourse id dept title code instr =
 type alias CourseDetail =
     { id : Int
     , desc : String
+    , passfail : Bool
+    , fifthcourse : Bool
     , deptnote : List String
     , distnote : List String
     , divattr : List String
@@ -380,6 +382,8 @@ courseDetailDecoder =
     D.succeed CourseDetail
         |> P.required "id" D.int
         |> P.required "desc" D.string
+        |> P.required "passfail" D.bool
+        |> P.required "fifthcourse" D.bool
         |> P.required "deptnote" listify
         |> P.required "distnote" listify
         |> P.required "divattr" listify

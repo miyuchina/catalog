@@ -21,6 +21,8 @@ CREATE TABLE course (
     dept           TEXT,
     title          TEXT,
     code           INTEGER,
+    passfail       INTEGER,
+    fifthcourse    INTEGER,
     desc           TEXT,
     deptnote       TEXT,
     distnote       TEXT,

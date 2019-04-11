@@ -81,6 +81,8 @@ async def parse_specifics(tag):
                  'type':           '',
                  'limit':          '',
                  'expected':       '',
+                 'fifthcourse':    False,
+                 'passfail':       False,
                 }
     for entry in tag.select('div'):
         result = await parse_label_value(entry)
@@ -124,10 +126,24 @@ def parse_instr(span):
 
 
 def parse_class_format(value):
-    try:
-        return {k.lower(): v for k, v in [pair.split(': ') for pair in value.split('  ')] if k != 'Class#'}
-    except ValueError:
-        return {}
+    result = {}
+    for pair in value.split('  '):
+        k, v = pair.split(':', maxsplit=1)
+        if k == 'Class#':
+            continue
+        elif k == 'Grading':
+            fifth_course = False
+            pass_fail = False
+            for line in v.strip().splitlines():
+                if line.endswith('pass/fail option,'):
+                    pass_fail = line.startswith('yes')
+                elif line.endswith('fifth course option'):
+                    fifth_course = line.startswith('yes')
+            result['fifthcourse'] = fifth_course
+            result['passfail'] = pass_fail
+        else:
+            result[k.lower().strip()] = v.strip()
+    return result
 
 
 def parse_dreq(dreq):

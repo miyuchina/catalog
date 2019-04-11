@@ -15,12 +15,13 @@ def main():
         cursor.execute(
             '''
             INSERT OR REPLACE INTO course
-                (id, dept, title, code, desc, deptnote, distnote, divattr,
-                 dreqs, enrollmentpref, expected, limit_, matlfee, prerequisites,
-                 rqmtseval, type, instr, extrainfo, term)
+                (id, dept, title, code, passfail, fifthcourse, desc, deptnote,
+                 distnote, divattr, dreqs, enrollmentpref, expected, limit_,
+                 matlfee, prerequisites, rqmtseval, type, instr, extrainfo,
+                 term)
             VALUES (
                 (SELECT id FROM course WHERE dept = ? AND code = ?),
-                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
             )
             ''',
             (course['dept'],
@@ -28,6 +29,8 @@ def main():
              course['dept'],
              course['title'],
              course['code'],
+             course['passfail'],
+             course['fifthcourse'],
              course['desc'],
              unlist(course['deptnote']),
              unlist(course['distnote']),
