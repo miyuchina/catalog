@@ -196,8 +196,16 @@ update msg model =
 
                         _ ->
                             UnknownTerm
+
+                displayMode =
+                    case model.displayMode of
+                        Search ->
+                            All
+
+                        _ ->
+                            model.displayMode
             in
-            ( { model | displayMode = All }, Cmd.map ApiMsg <| loadCourses term )
+            ( { model | displayMode = displayMode }, Cmd.map ApiMsg <| loadCourses term )
 
 
 subscriptions : Model -> Sub Msg
