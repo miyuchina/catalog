@@ -1,14 +1,16 @@
-module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), Term(..), checkLogin, emptyModel, loadCourseDetail, loadCourses, setBucket, update)
+module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), Term(..), checkLogin, emptyModel, loadBucket, loadCourseDetail, loadCourses, setBucket, update)
 
+import Browser.Navigation as Nav
 import Dict exposing (Dict)
 import Html exposing (Html, a, form, input, p, text)
-import Html.Attributes exposing (class, hidden, id, placeholder, type_, value)
+import Html.Attributes exposing (class, hidden, href, id, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import Http
 import Json.Decode as D
 import Json.Decode.Pipeline as P
 import Json.Encode as E
 import Set exposing (Set)
+import Url exposing (percentDecode, percentEncode)
 
 
 type alias Model =
@@ -20,6 +22,7 @@ type alias Model =
     , bucketName : String
     , bucket : Set Int
     , dialog : Dialog
+    , key : Nav.Key
     }
 
 
@@ -29,8 +32,8 @@ type alias Dialog =
     }
 
 
-emptyModel : Model
-emptyModel =
+emptyModel : Nav.Key -> Model
+emptyModel key =
     { courses = []
     , details = Dict.empty
     , currentUser = ""
@@ -39,6 +42,7 @@ emptyModel =
     , bucketName = ""
     , bucket = Set.empty
     , dialog = { title = "", content = [] }
+    , key = key
     }
 
 
@@ -67,8 +71,7 @@ type Msg
     | Register
     | Logout
     | SaveBucket
-    | LoadBucket
-    | LoadBucketWithName String
+    | GoToBucket
     | EnteredUsername String
     | EnteredPassword String
     | EnteredBucketName String
@@ -176,15 +179,21 @@ update msg model =
                     handleHttpError model err
 
         SaveBucketResponse result ->
+            let
+                successDialog =
+                    Dialog "Success"
+                        [ p []
+                            [ text "Your bucket will be accessible at: "
+                            , a [ href <| "/bucket/" ++ model.bucketName ]
+                                [ text <| "https://williamscatalog.com/bucket/" ++ model.bucketName ]
+                            ]
+                        ]
+            in
             case result of
                 Ok bucketResponse ->
                     case bucketResponse.success of
                         True ->
-                            ( { model
-                                | dialog = textDialog "Success" bucketResponse.msg
-                              }
-                            , Cmd.none
-                            )
+                            ( { model | dialog = successDialog }, Cmd.none )
 
                         False ->
                             ( { model
@@ -226,7 +235,7 @@ update msg model =
                     case bucketResponse.success of
                         True ->
                             ( { model
-                                | dialog = textDialog "Success" bucketResponse.msg
+                                | dialog = { title = "", content = [] }
                                 , bucket = bucketResponse.courses
                               }
                             , Cmd.none
@@ -236,6 +245,7 @@ update msg model =
                             ( { model
                                 | dialog = textDialog "Error" bucketResponse.msg
                                 , bucketName = ""
+                                , bucket = Set.empty
                               }
                             , Cmd.none
                             )
@@ -254,7 +264,12 @@ update msg model =
             )
 
         ShowSaveBucket ->
-            ( { model | dialog = saveBucketDialog }
+            let
+                bucketName =
+                    percentDecode model.bucketName
+                        |> Maybe.withDefault ""
+            in
+            ( { model | dialog = saveBucketDialog bucketName }
             , Cmd.none
             )
 
@@ -278,11 +293,8 @@ update msg model =
         SaveBucket ->
             ( model, saveBucket model.bucketName model.bucket )
 
-        LoadBucket ->
-            ( model, loadBucket model.bucketName )
-
-        LoadBucketWithName name ->
-            ( model, loadBucket name )
+        GoToBucket ->
+            ( model, Nav.pushUrl model.key <| "/bucket/" ++ model.bucketName )
 
         EnteredUsername username ->
             ( { model | username = username }, Cmd.none )
@@ -291,7 +303,7 @@ update msg model =
             ( { model | password = password }, Cmd.none )
 
         EnteredBucketName bucketName ->
-            ( { model | bucketName = bucketName }, Cmd.none )
+            ( { model | bucketName = percentEncode bucketName }, Cmd.none )
 
         ClearDialog ->
             ( { model | dialog = { title = "", content = [] } }
@@ -641,8 +653,8 @@ registerDialog =
     }
 
 
-saveBucketDialog : Dialog
-saveBucketDialog =
+saveBucketDialog : String -> Dialog
+saveBucketDialog prevBucketName =
     { title = "Save bucket"
     , content =
         [ form [ onSubmit SaveBucket ]
@@ -650,6 +662,7 @@ saveBucketDialog =
                 [ onInput EnteredBucketName
                 , type_ "text"
                 , placeholder "Name your bucket!"
+                , value prevBucketName
                 ]
                 []
             , input
@@ -667,7 +680,7 @@ loadBucketDialog : Dialog
 loadBucketDialog =
     { title = "Go to bucket..."
     , content =
-        [ form [ onSubmit LoadBucket ]
+        [ form [ onSubmit GoToBucket ]
             [ input
                 [ onInput EnteredBucketName
                 , type_ "text"
@@ -690,6 +703,6 @@ userBucketsDialog username names =
     { title = username ++ "'s buckets"
     , content =
         List.map
-            (\name -> a [ onClick <| LoadBucketWithName name ] [ text name ])
+            (\name -> a [ href <| "/bucket/" ++ name ] [ text name ])
             names
     }

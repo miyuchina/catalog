@@ -2,6 +2,7 @@ port module Main exposing (init)
 
 import Api exposing (..)
 import Browser
+import Browser.Navigation as Nav
 import Color exposing (Color, black, white)
 import Dict exposing (Dict)
 import Html exposing (Html, a, div, form, h1, input, label, li, option, section, select, span, text, ul)
@@ -16,14 +17,18 @@ import Material.Icons.Image exposing (collections, collections_bookmark)
 import Material.Icons.Navigation exposing (close)
 import Set exposing (Set)
 import Svg exposing (Svg)
+import Url
+import Url.Parser as P exposing ((</>))
 
 
 main =
-    Browser.document
+    Browser.application
         { init = init
         , view = view
         , update = update
         , subscriptions = subscriptions
+        , onUrlChange = UrlChanged
+        , onUrlRequest = LinkClicked
         }
 
 
@@ -34,6 +39,7 @@ type alias Model =
     , expandedCourses : Set Int
     , displayMode : DisplayMode
     , searchResults : List Api.Course
+    , url : Url.Url
     }
 
 
@@ -48,23 +54,43 @@ type DisplayMode
     | Bucket
 
 
-init : List Int -> ( Model, Cmd Msg )
-init bucket =
-    ( { api = Set.fromList bucket |> setBucket emptyModel
+type Route
+    = BucketRoute String
+    | UnknownRoute
+
+
+init : List Int -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init bucket url key =
+    let
+        initCmdList =
+            [ Cmd.map ApiMsg (loadCourses F2019)
+            , Cmd.map ApiMsg checkLogin
+            ]
+
+        ( displayMode, cmdList ) =
+            case Maybe.withDefault UnknownRoute <| P.parse routeParser url of
+                UnknownRoute ->
+                    ( All, initCmdList )
+
+                BucketRoute bucketName ->
+                    ( Bucket, Cmd.map ApiMsg (loadBucket bucketName) :: initCmdList )
+    in
+    ( { api = Set.fromList bucket |> setBucket (emptyModel key)
       , page = 1
       , searchPage = 1
       , expandedCourses = Set.empty
-      , displayMode = All
+      , displayMode = displayMode
       , searchResults = []
+      , url = url
       }
-    , [ loadCourses F2019, checkLogin ]
-        |> List.map (Cmd.map ApiMsg)
-        |> Cmd.batch
+    , Cmd.batch cmdList
     )
 
 
 type Msg
     = NoOp
+    | LinkClicked Browser.UrlRequest
+    | UrlChanged Url.Url
     | LoadMore Bool
     | UserSearch String
     | ApiMsg Api.Msg
@@ -72,6 +98,7 @@ type Msg
     | ToggleInBucket Api.Course
     | ToggleCourse Api.Course
     | SelectTerm String
+    | GoToIndex
 
 
 port loadMore : (Bool -> msg) -> Sub msg
@@ -85,6 +112,17 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        LinkClicked urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.api.key (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+        UrlChanged url ->
+            route model url
 
         LoadMore _ ->
             case model.displayMode of
@@ -122,10 +160,7 @@ update msg model =
 
                 displayMode =
                     case apiMsg of
-                        LoadBucket ->
-                            Bucket
-
-                        LoadBucketWithName _ ->
+                        GoToBucket ->
                             Bucket
 
                         _ ->
@@ -207,6 +242,28 @@ update msg model =
             in
             ( { model | displayMode = displayMode }, Cmd.map ApiMsg <| loadCourses term )
 
+        GoToIndex ->
+            ( model, Nav.load "/" )
+
+
+route : Model -> Url.Url -> ( Model, Cmd Msg )
+route model url =
+    case Maybe.withDefault UnknownRoute <| P.parse routeParser url of
+        BucketRoute bucketName ->
+            ( { model | url = url, displayMode = Bucket }
+            , Cmd.map ApiMsg <| loadBucket bucketName
+            )
+
+        UnknownRoute ->
+            ( model, Nav.load <| Url.toString url )
+
+
+routeParser : P.Parser (Route -> a) a
+routeParser =
+    P.oneOf
+        [ P.map BucketRoute (P.s "bucket" </> P.string)
+        ]
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -229,12 +286,11 @@ viewNavbar : String -> Html Msg
 viewNavbar currentUser =
     div [ id "navbar" ]
         [ div [ id "navbar-inner" ]
-            [ h1 []
+            [ h1 [ onClick GoToIndex ]
                 [ span [ id "another" ] [ text "(ANOTHER)" ], text "CATALOG" ]
             , a [ href "/faq" ] [ text "FAQ" ]
-            , a
+            , span
                 [ id "login"
-                , href "#"
                 , onClick <|
                     if String.isEmpty currentUser then
                         ApiMsg ShowLogin
@@ -319,7 +375,7 @@ viewTermSelection =
 
 viewToolbarButton : Msg -> Icon -> String -> Html Msg
 viewToolbarButton msg icon content =
-    a [ href "#", class "tool-button", onClick msg ] [ iconize icon, text content ]
+    span [ class "tool-button", onClick msg ] [ iconize icon, text content ]
 
 
 viewCourses : Model -> Html Msg

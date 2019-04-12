@@ -63,6 +63,8 @@ body {
 #dialog-content a {
     display: block;
     margin-top: 1em;
+    color: black;
+    text-decoration: none;
     cursor: pointer;
 }
 
@@ -92,6 +94,7 @@ body {
     height: 3em;
     background-color: #222;
     z-index: 1;
+    cursor: pointer;
 }
 
 #navbar-inner {
@@ -114,14 +117,14 @@ body {
     margin: 0 5px -6px 0;
 }
 
-#navbar a {
+#navbar a, #login {
     flex: 0 0 auto;
     color: white;
     text-decoration: none;
     margin-left: 1em;
 }
 
-#navbar a:hover {
+#navbar a:hover, #login:hover {
     color: #aaa;
 }
 
@@ -170,6 +173,7 @@ body {
 }
 
 .tool-button {
+    cursor: pointer;
     flex: none;
     margin: 1em 0 auto 2em;
     font-weight: bolder;
