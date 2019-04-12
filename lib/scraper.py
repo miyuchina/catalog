@@ -136,9 +136,9 @@ def parse_class_format(value):
     result = {}
     for pair in value.split('  '):
         k, v = pair.split(':', maxsplit=1)
-        if k == 'Class#':
+        if k.strip() == 'Class#':
             continue
-        elif k == 'Grading':
+        elif k.strip() == 'Grading':
             fifth_course = False
             pass_fail = False
             for line in v.strip().splitlines():
@@ -183,7 +183,7 @@ async def main():
     fall_courses = await find_courses("fall-2019", soup)
 
     soup = Soup(requests.get(URI.format(spring_term)).text, 'html.parser')
-    spring_courses = await find_courses("fall-2019", soup)
+    spring_courses = await find_courses("spring-2020", soup)
 
     courses = []
     courses.extend(fall_courses)
