@@ -71,7 +71,6 @@ async def parse_desc(tag):
 
 async def parse_specifics(tag):
     specifics = {'divattr':        [],
-                 'distnote':       [],
                  'matlfee':        [],
                  'enrollmentpref': [],
                  'deptnote':       [],
@@ -81,12 +80,18 @@ async def parse_specifics(tag):
                  'type':           '',
                  'limit':          '',
                  'expected':       '',
+                 'xlistings':      [],
+                 'wsnotes':        '',
+                 'dpenotes':       '',
+                 'qfrnotes':       '',
                  'fifthcourse':    False,
                  'passfail':       False,
                 }
     for entry in tag.select('div'):
         result = await parse_label_value(entry)
         for name, value in result.items():
+            if name not in specifics:
+                raise KeyError(f'Missing specifics entry: {name}')
             if isinstance(value, list):
                 specifics[name].extend(value)
             else:
@@ -102,6 +107,8 @@ async def parse_label_value(entry):
     value = entry.select('span.value')[0].text.strip()
     if name == 'classformat':
         return parse_class_format(value)
+    if name == 'distnote':
+        return parse_dist_note(label, value)
     value = [item.strip() for item in value.split(';')]
     return {name: value}
 
@@ -146,13 +153,20 @@ def parse_class_format(value):
     return result
 
 
+def parse_dist_note(label, value):
+    if label == 'Notes':
+        value = [f'{c}: {d}' for c, d in zip(*[value.splitlines()[3+i::2] for i in range(2)])]
+        return {'xlistings': value}
+    return {label.replace(' ', '').lower(): value}
+
+
 def parse_dreq(dreq):
     return {'div_d2' : 'Divison II',
             'qfr_qfr': 'Quantative Formal Reasoning',
             'div_d3' : 'Division III',
             'div_d1' : 'Division I',
             'dpe_dpe': 'Difference, Power and Equity',
-            'wac_wac': 'Writing Intensive'}[dreq.lower()]
+            'wac_wac': 'Writing Skills'}[dreq.lower()]
 
 
 def make_course():

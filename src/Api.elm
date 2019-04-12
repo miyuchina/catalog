@@ -338,7 +338,10 @@ type alias CourseDetail =
     , passfail : Bool
     , fifthcourse : Bool
     , deptnote : List String
-    , distnote : List String
+    , xlistings : List String
+    , wsnotes : String
+    , dpenotes : String
+    , qfrnotes : String
     , divattr : List String
     , dreqs : List String
     , enrollmentpref : List String
@@ -385,7 +388,10 @@ courseDetailDecoder =
         |> P.required "passfail" D.bool
         |> P.required "fifthcourse" D.bool
         |> P.required "deptnote" listify
-        |> P.required "distnote" listify
+        |> P.required "xlistings" listify
+        |> P.required "wsnotes" D.string
+        |> P.required "dpenotes" D.string
+        |> P.required "qfrnotes" D.string
         |> P.required "divattr" listify
         |> P.required "dreqs" listify
         |> P.required "enrollmentpref" listify

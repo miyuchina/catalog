@@ -21,9 +21,9 @@ def course(course_id):
     cursor.execute(
         """
         SELECT
-            id, desc, passfail, fifthcourse, deptnote, distnote, divattr, dreqs,
-            enrollmentpref, expected, limit_, matlfee, prerequisites, rqmtseval,
-            extrainfo, type
+            id, desc, passfail, fifthcourse, deptnote, xlistings, wsnotes,
+            dpenotes, qfrnotes, divattr, dreqs, enrollmentpref, expected,
+            limit_, matlfee, prerequisites, rqmtseval, extrainfo, type
         FROM course WHERE id = ?
         """,
         (course_id,)
