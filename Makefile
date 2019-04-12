@@ -4,8 +4,12 @@ PYTHON=python3
 FLASK_DIR=catalog
 ELM_DIR=src
 LIB_DIR=lib
+SCRAPER=$(LIB_DIR)/scraper.py
 LOADER=$(LIB_DIR)/load.py
 OUTPUT=$(FLASK_DIR)/static/catalog.js
+
+scrape:
+	$(PYTHON) $(SCRAPER)
 
 load:
 	$(PYTHON) $(LOADER)

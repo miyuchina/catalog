@@ -175,15 +175,19 @@ def make_course():
 
 async def main():
     fall_term = 1201
+    spring_term = 1203
 
     URI = "https://catalog.williams.edu/list/?kywd=&Action=Search&strm={}&subj=&sbattr=&cn=&enrlmt=&cmp=&sttm=&endtm=&insfn=&insln="
-
 
     soup = Soup(requests.get(URI.format(fall_term)).text, 'html.parser')
     fall_courses = await find_courses("fall-2019", soup)
 
+    soup = Soup(requests.get(URI.format(spring_term)).text, 'html.parser')
+    spring_courses = await find_courses("fall-2019", soup)
+
     courses = []
     courses.extend(fall_courses)
+    courses.extend(spring_courses)
 
     with open('catalog.json', 'w') as fout:
         json.dump(courses, fout)
