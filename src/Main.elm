@@ -3,12 +3,13 @@ port module Main exposing (init)
 import Api exposing (..)
 import Browser
 import Browser.Dom as Dom
+import Browser.Events as Events
 import Browser.Navigation as Nav
 import Color exposing (Color, black, white)
 import Dict exposing (Dict)
 import Html exposing (Html, a, div, form, h1, input, label, li, option, section, select, span, text, ul)
 import Html.Attributes exposing (action, attribute, autocomplete, class, hidden, href, id, placeholder, spellcheck, type_, value)
-import Html.Events exposing (onClick, onInput, onSubmit, stopPropagationOn)
+import Html.Events exposing (keyCode, onClick, onInput, onSubmit, stopPropagationOn)
 import Html.Lazy exposing (lazy, lazy4)
 import Json.Decode as D
 import Json.Encode as E
@@ -273,7 +274,19 @@ routeParser =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    loadMore LoadMore
+    let
+        dismissDialog =
+            case String.isEmpty model.api.dialog.title of
+                True ->
+                    Sub.none
+
+                False ->
+                    Events.onKeyUp <| escapeDecoder <| ApiMsg ClearDialog
+    in
+    Sub.batch
+        [ loadMore LoadMore
+        , dismissDialog
+        ]
 
 
 view : Model -> Browser.Document Msg
@@ -357,7 +370,7 @@ viewToolbar displayMode =
                     "View Bucket"
     in
     div [ id "toolbar" ]
-        [ form [ action "#", onSubmit SubmitSearch ]
+        [ form [ action "", onSubmit SubmitSearch ]
             [ input
                 [ id "search"
                 , type_ "text"
@@ -561,6 +574,20 @@ onLocalClick msg =
     stopPropagationOn "click" <|
         D.map (\m -> ( m, True )) <|
             D.succeed msg
+
+
+escapeDecoder : Msg -> D.Decoder Msg
+escapeDecoder msg =
+    let
+        tagger key =
+            case key of
+                27 ->
+                    msg
+
+                _ ->
+                    NoOp
+    in
+    D.map tagger keyCode
 
 
 type alias Icon =
