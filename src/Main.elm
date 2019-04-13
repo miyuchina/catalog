@@ -13,7 +13,7 @@ import Html.Events exposing (keyCode, onClick, onInput, onSubmit, stopPropagatio
 import Html.Lazy exposing (lazy, lazy4)
 import Json.Decode as D
 import Json.Encode as E
-import Material.Icons.Action exposing (account_circle, bookmark, bookmark_border)
+import Material.Icons.Action exposing (account_circle, bookmark, bookmark_border, date_range)
 import Material.Icons.Content exposing (save)
 import Material.Icons.Image exposing (collections, collections_bookmark)
 import Material.Icons.Navigation exposing (close)
@@ -383,18 +383,29 @@ viewToolbar displayMode =
                 ]
                 []
             ]
-        , viewTermSelection
-        , viewToolbarButton ToggleBucket collections_bookmark bucketText
-        , viewToolbarButton (ApiMsg ShowSaveBucket) save "Save bucket"
-        , viewToolbarButton (ApiMsg ShowLoadBucket) collections "Go to bucket"
+        , div [ id "tool-buttons" ]
+            [ viewTermSelection
+            , viewToolbarButton ToggleBucket collections_bookmark bucketText
+            , viewToolbarButton (ApiMsg ShowSaveBucket) save "Save bucket"
+            , viewToolbarButton (ApiMsg ShowLoadBucket) collections "Go to bucket"
+            ]
+        ]
+
+
+viewToolbarSelection : (String -> Msg) -> Icon -> List ( String, String ) -> Html Msg
+viewToolbarSelection msg icon options =
+    span [ class "tool-button" ]
+        [ iconize icon
+        , select [ onInput msg ] <|
+            List.map (\( v, t ) -> option [ value v ] [ text t ]) options
         ]
 
 
 viewTermSelection : Html Msg
 viewTermSelection =
-    select [ onInput <| SelectTerm ]
-        [ option [ value "fall-2019" ] [ text "Fall 2019" ]
-        , option [ value "spring-2020" ] [ text "Spring 2020" ]
+    viewToolbarSelection SelectTerm date_range <|
+        [ ( "fall-2019", "Fall 2019" )
+        , ( "spring-2020", "Spring 2020" )
         ]
 
 
