@@ -190,7 +190,13 @@ body {
     text-decoration: underline;
 }
 
+#toolbar form {
+    width: 100%;
+    margin-bottom: 0;
+}
+
 #search {
+    -webkit-appearance: none;
     flex: 1 1 auto;
     border: 1px solid #aaa;
     padding: 0.5em;
@@ -284,7 +290,7 @@ body {
     #another::after { content: ' '; }
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 550px) {
     #another::after { content: ' '; }
     .dialog-button { width: 100%; }
     .dialog-button + .dialog-button { margin-left: 0; }

@@ -2,12 +2,13 @@ port module Main exposing (init)
 
 import Api exposing (..)
 import Browser
+import Browser.Dom as Dom
 import Browser.Navigation as Nav
 import Color exposing (Color, black, white)
 import Dict exposing (Dict)
 import Html exposing (Html, a, div, form, h1, input, label, li, option, section, select, span, text, ul)
-import Html.Attributes exposing (class, hidden, href, id, placeholder, type_, value)
-import Html.Events exposing (onClick, onInput, stopPropagationOn)
+import Html.Attributes exposing (action, attribute, autocomplete, class, hidden, href, id, placeholder, spellcheck, type_, value)
+import Html.Events exposing (onClick, onInput, onSubmit, stopPropagationOn)
 import Html.Lazy exposing (lazy, lazy4)
 import Json.Decode as D
 import Json.Encode as E
@@ -17,6 +18,7 @@ import Material.Icons.Image exposing (collections, collections_bookmark)
 import Material.Icons.Navigation exposing (close)
 import Set exposing (Set)
 import Svg exposing (Svg)
+import Task
 import Url
 import Url.Parser as P exposing ((</>))
 
@@ -93,6 +95,7 @@ type Msg
     | UrlChanged Url.Url
     | LoadMore Bool
     | UserSearch String
+    | SubmitSearch
     | ApiMsg Api.Msg
     | ToggleBucket
     | ToggleInBucket Api.Course
@@ -152,6 +155,9 @@ update msg model =
                       }
                     , Cmd.none
                     )
+
+        SubmitSearch ->
+            ( model, Task.attempt (\_ -> NoOp) (Dom.blur "search") )
 
         ApiMsg apiMsg ->
             let
@@ -351,13 +357,19 @@ viewToolbar displayMode =
                     "View Bucket"
     in
     div [ id "toolbar" ]
-        [ input
-            [ id "search"
-            , type_ "text"
-            , onInput UserSearch
-            , placeholder "Search anything..."
+        [ form [ action "#", onSubmit SubmitSearch ]
+            [ input
+                [ id "search"
+                , type_ "text"
+                , onInput UserSearch
+                , placeholder "Search anything..."
+                , autocomplete False
+                , spellcheck False
+                , attribute "autocorrect" "off"
+                , attribute "autocapitalize" "none"
+                ]
+                []
             ]
-            []
         , viewTermSelection
         , viewToolbarButton ToggleBucket collections_bookmark bucketText
         , viewToolbarButton (ApiMsg ShowSaveBucket) save "Save bucket"
