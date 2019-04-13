@@ -10,7 +10,7 @@ import Dict exposing (Dict)
 import Html exposing (Html, a, div, form, h1, input, label, li, option, section, select, span, text, ul)
 import Html.Attributes exposing (action, attribute, autocomplete, class, hidden, href, id, placeholder, spellcheck, type_, value)
 import Html.Events exposing (keyCode, onClick, onInput, onSubmit, stopPropagationOn)
-import Html.Lazy exposing (lazy, lazy4)
+import Html.Lazy exposing (lazy, lazy2, lazy4)
 import Json.Decode as D
 import Json.Encode as E
 import Material.Icons.Action exposing (account_circle, bookmark, bookmark_border, date_range)
@@ -41,7 +41,6 @@ type alias Model =
     , searchPage : Int
     , expandedCourses : Set Int
     , displayMode : DisplayMode
-    , searchResults : List Api.Course
     , url : Url.Url
     }
 
@@ -83,7 +82,6 @@ init bucket url key =
       , searchPage = 1
       , expandedCourses = Set.empty
       , displayMode = displayMode
-      , searchResults = []
       , url = url
       }
     , Cmd.batch cmdList
@@ -142,17 +140,18 @@ update msg model =
         UserSearch searchTerm ->
             case searchTerm of
                 "" ->
-                    ( { model | displayMode = All, searchPage = 1 }
+                    ( { model
+                        | displayMode = All
+                        , searchPage = 1
+                        , api = updateSearchResults model.api searchTerm
+                      }
                     , Cmd.none
                     )
 
                 _ ->
                     ( { model
                         | displayMode = Search
-                        , searchResults =
-                            List.filter
-                                (matchCourse <| String.toLower searchTerm)
-                                model.api.courses
+                        , api = updateSearchResults model.api searchTerm
                       }
                     , Cmd.none
                     )
@@ -238,16 +237,8 @@ update msg model =
 
                         _ ->
                             UnknownTerm
-
-                displayMode =
-                    case model.displayMode of
-                        Search ->
-                            All
-
-                        _ ->
-                            model.displayMode
             in
-            ( { model | displayMode = displayMode }, Cmd.map ApiMsg <| loadCourses term )
+            ( model, Cmd.map ApiMsg <| loadCourses term )
 
         GoToIndex ->
             ( model, Nav.load "/" )
@@ -295,7 +286,7 @@ view model =
     , body =
         [ lazy viewDialog model.api.dialog
         , lazy viewNavbar model.api.currentUser
-        , lazy viewToolbar model.displayMode
+        , lazy2 viewToolbar model.api.searchTerm model.displayMode
         , viewCourses model
         ]
     }
@@ -358,9 +349,17 @@ viewDialog dialog =
         ]
 
 
-viewToolbar : DisplayMode -> Html Msg
-viewToolbar displayMode =
+viewToolbar : String -> DisplayMode -> Html Msg
+viewToolbar searchTerm displayMode =
     let
+        searchValue =
+            case displayMode of
+                Search ->
+                    searchTerm
+
+                _ ->
+                    ""
+
         bucketText =
             case displayMode of
                 Bucket ->
@@ -376,6 +375,7 @@ viewToolbar displayMode =
                 , type_ "text"
                 , onInput UserSearch
                 , placeholder "Search anything..."
+                , value searchValue
                 , autocomplete False
                 , spellcheck False
                 , attribute "autocorrect" "off"
@@ -423,7 +423,7 @@ viewCourses model =
                     List.take (model.page * perPage) model.api.courses
 
                 Search ->
-                    List.take (model.searchPage * perPage) model.searchResults
+                    List.take (model.searchPage * perPage) model.api.searchResults
 
                 Bucket ->
                     List.filter
@@ -608,8 +608,3 @@ type alias Icon =
 iconize : Icon -> Svg Msg
 iconize icon =
     icon black 16
-
-
-matchCourse : String -> Api.Course -> Bool
-matchCourse searchTerm course =
-    String.contains searchTerm course.searchable

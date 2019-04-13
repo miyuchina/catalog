@@ -1,4 +1,4 @@
-module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), Term(..), checkLogin, emptyModel, loadBucket, loadCourseDetail, loadCourses, setBucket, update)
+module Api exposing (Course, CourseDetail, CourseSection, Dialog, Model, Msg(..), Term(..), checkLogin, emptyModel, loadBucket, loadCourseDetail, loadCourses, setBucket, update, updateSearchResults)
 
 import Browser.Navigation as Nav
 import Dict exposing (Dict)
@@ -16,6 +16,8 @@ import Url exposing (percentDecode, percentEncode)
 type alias Model =
     { courses : List Course
     , details : Dict Int CourseDetail
+    , searchTerm : String
+    , searchResults : List Course
     , currentUser : String
     , username : String
     , password : String
@@ -36,6 +38,8 @@ emptyModel : Nav.Key -> Model
 emptyModel key =
     { courses = []
     , details = Dict.empty
+    , searchTerm = ""
+    , searchResults = []
     , currentUser = ""
     , username = ""
     , password = ""
@@ -49,6 +53,17 @@ emptyModel key =
 setBucket : Model -> Set Int -> Model
 setBucket model bucket =
     { model | bucket = bucket }
+
+
+updateSearchResults : Model -> String -> Model
+updateSearchResults model searchTerm =
+    { model
+        | searchTerm = searchTerm
+        , searchResults =
+            List.filter
+                (matchCourse <| String.toLower searchTerm)
+                model.courses
+    }
 
 
 type Msg
@@ -83,7 +98,9 @@ update msg model =
         CoursesLoaded termString result ->
             case result of
                 Ok courses ->
-                    ( { model | courses = courses }, Cmd.none )
+                    ( updateSearchResults { model | courses = courses } model.searchTerm
+                    , Cmd.none
+                    )
 
                 Err err ->
                     handleHttpError model err
@@ -342,6 +359,11 @@ makeCourse id dept title code instr =
                     ]
     in
     Course id dept title code instr searchable
+
+
+matchCourse : String -> Course -> Bool
+matchCourse searchTerm course =
+    String.contains searchTerm course.searchable
 
 
 type alias CourseDetail =
